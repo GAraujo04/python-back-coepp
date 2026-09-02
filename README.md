@@ -209,5 +209,33 @@ migradas até aqui:
       confirmando com `acknowledgeWarnings=true`, `404` para
       paciente/estagiário inexistente (mesma mensagem nos dois).
 
+- [x] `documents` (`POST /documents/{id}/transitions`, `GET /documents/review-queue`,
+      `GET /documents/{id}/review`) — máquina de estados dos documentos
+      clínicos (RASCUNHO → ENVIADO_PARA_SUPERVISAO → EM_REVISAO →
+      APROVADO_LOCKED/REJEITADO/REVISAO_SOLICITADA), assinatura interna
+      (HMAC-SHA256) e trava WORM na aprovação. Com `domain/` no original.
+      `resolve_transition` porta a tabela de transições 1:1 (dict de
+      dict, mesma forma que o `Record` do TS). Novos modelos:
+      `DocumentApproval`, `ReviewComment`; `ClinicalDocument` ganhou
+      `author`/`patient`/`comments` (relationships eager). Hash do
+      conteúdo (`sha256` sobre o JSON) usa `separators=(",", ":")` +
+      `ensure_ascii=False` pra bater byte a byte com o
+      `JSON.stringify()` do Node (mesma convenção de key-order já
+      preservada desde a slice screening). Verificado: ruff, mypy, 26
+      testes pytest. Servidor uvicorn real, ciclo de vida completo
+      testado ao vivo contra o Fastify:
+      SUBMIT → TAKE → REQUEST_CHANGES (com comentário) → SUBMIT de novo →
+      APPROVE, criando um documento inteiramente pelo Fastify e lendo o
+      resultado final pelo Python — **idêntico byte a byte**, incluindo
+      as 3 assinaturas (2 do estagiário, 1 do supervisor com CRP),
+      1 comentário e o nome do paciente decifrado. Também testado:
+      transição inválida a partir de `APROVADO_LOCKED` (`409
+      invalid_transition`, mesma mensagem); papel sem permissão pra
+      ação (`PATIENT` tentando `SUBMIT`, mesma mensagem "Papel
+      não permitido"); RBAC do `review-queue` (`403` pra `INTERN`);
+      estagiário sem autoria/coautoria tentando `SUBMIT` (`403
+      forbidden`, "Apenas o autor ou coautor...") — todos idênticos nos
+      dois backends.
+
 O Fastify (`pep/apps/api`) continua sendo o backend real em produção — este
 repo não substitui nada até todas as 11 slices estarem migradas e validadas.

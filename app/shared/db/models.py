@@ -267,6 +267,11 @@ class ClinicalDocument(Base):
     signatures: Mapped[list[DocumentSignature]] = relationship(
         "DocumentSignature", order_by="DocumentSignature.signed_at", lazy="selectin"
     )
+    author: Mapped[User] = relationship(User, foreign_keys=[author_id], lazy="joined")
+    patient: Mapped[Patient] = relationship(Patient, lazy="joined")
+    comments: Mapped[list[ReviewComment]] = relationship(
+        "ReviewComment", order_by="ReviewComment.created_at.desc()", lazy="selectin"
+    )
 
 
 class PendingMatchRequest(Base):
@@ -287,6 +292,39 @@ class PendingMatchRequest(Base):
 
     patient: Mapped[Patient] = relationship(Patient, lazy="joined")
     suggested_intern: Mapped[User | None] = relationship(User, lazy="joined")
+
+
+class DocumentApproval(Base):
+    __tablename__ = "document_approvals"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    document_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("clinical_documents.id"), name="document_id"
+    )
+    supervisor_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="supervisor_id"
+    )
+    signature: Mapped[str] = mapped_column(Text)  # assinatura/validação digital do supervisor (CRP)
+    content_hash: Mapped[str] = mapped_column(String, name="content_hash")  # SHA-256 do snapshot aprovado
+    approved_at: Mapped[datetime] = mapped_column(DateTime, name="approved_at", server_default=func.now())
+
+
+class ReviewComment(Base):
+    __tablename__ = "review_comments"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    document_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("clinical_documents.id"), name="document_id"
+    )
+    reviewer_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="reviewer_id"
+    )
+    # JSON serializado manualmente — âncora por lauda/seção: { page, section }
+    anchor: Mapped[str | None] = mapped_column(Text, default=None)
+    body: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+    reviewer: Mapped[User] = relationship(User, lazy="joined")
 
 
 class DocumentSignature(Base):
