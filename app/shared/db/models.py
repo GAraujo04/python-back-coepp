@@ -90,11 +90,20 @@ class Patient(Base):
     user_id: Mapped[str | None] = mapped_column(
         UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="user_id", unique=True, default=None
     )
+    full_name_enc: Mapped[bytes] = mapped_column(LargeBinary, name="full_name_enc")
+    cpf_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="cpf_enc", default=None)
     cpf_hash: Mapped[str | None] = mapped_column(String, name="cpf_hash", unique=True, default=None)
     birth_date: Mapped[date | None] = mapped_column(Date, name="birth_date", default=None)
-    full_name_enc: Mapped[bytes] = mapped_column(LargeBinary, name="full_name_enc")
-    # cpf_enc, guardian_*, has_disability etc. entram quando a slice
-    # patients (escrita) for migrada — não usados pela leitura/login.
+    phone: Mapped[str | None] = mapped_column(String, default=None)
+    guardian_name_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="guardian_name_enc", default=None)
+    guardian_cpf_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="guardian_cpf_enc", default=None)
+    guardian_relationship: Mapped[str | None] = mapped_column(String, name="guardian_relationship", default=None)
+    guardian_phone: Mapped[str | None] = mapped_column(String, name="guardian_phone", default=None)
+    has_disability: Mapped[bool] = mapped_column(name="has_disability", default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
+
+    disabilities: Mapped[list[PatientDisability]] = relationship("PatientDisability", lazy="selectin")
 
 
 class Disciplina(Base):
@@ -133,3 +142,45 @@ class Appointment(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
 
     room: Mapped[Room | None] = relationship(Room, lazy="joined")
+
+
+class PatientDisability(Base):
+    __tablename__ = "patient_disabilities"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    patient_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("patients.id"), name="patient_id"
+    )
+    type: Mapped[str] = mapped_column(String)
+    other_text_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="other_text_enc", default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+
+class AvailabilitySlot(Base):
+    __tablename__ = "availability_slots"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    patient_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("patients.id"), name="patient_id", default=None
+    )
+    intern_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="intern_id", default=None
+    )
+    slot_at: Mapped[datetime] = mapped_column(DateTime, name="slot_at")
+    matched: Mapped[bool] = mapped_column(default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+
+class Assignment(Base):
+    __tablename__ = "assignments"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    patient_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("patients.id"), name="patient_id"
+    )
+    intern_id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="intern_id")
+    supervisor_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="supervisor_id", default=None
+    )
+    active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())

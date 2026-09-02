@@ -21,6 +21,7 @@ from .features.auth.presentation.routes import router as auth_router
 from .features.auth.presentation.user_routes import router as user_router
 from .features.disciplinas.presentation.routes import router as disciplinas_router
 from .features.health.presentation.routes import router as health_router
+from .features.patients.presentation.routes import router as patients_router
 from .features.rooms.presentation.routes import router as rooms_router
 from .shared.config.env import load_env
 from .shared.http.correlation import CorrelationIdMiddleware
@@ -73,8 +74,9 @@ def create_app() -> FastAPI:
     app.include_router(appointments_router)
     app.include_router(disciplinas_router)
     app.include_router(rooms_router)
-    # screening, patients, enrollment, matching, documents, assignments —
-    # entram aqui conforme cada slice for migrada (ver spec:
+    app.include_router(patients_router)
+    # screening, enrollment, matching, documents, assignments — entram
+    # aqui conforme cada slice for migrada (ver spec:
     # docs/specs/migracao-backend-python.md).
 
     return app
