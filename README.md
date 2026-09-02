@@ -237,5 +237,58 @@ migradas até aqui:
       forbidden`, "Apenas o autor ou coautor...") — todos idênticos nos
       dois backends.
 
-O Fastify (`pep/apps/api`) continua sendo o backend real em produção — este
-repo não substitui nada até todas as 11 slices estarem migradas e validadas.
+- [x] `assignments` (`GET /assignments`, `PATCH /assignments/{id}`) —
+      última das 11 slices. Gestão de vínculos (paciente↔estagiário↔supervisor)
+      pelo Administrativo; o vínculo em si nasce do pareamento (slice
+      matching), isto é só a correção manual de um já existente. Sem
+      `domain/` nem `application/` no original — a validação (campo
+      obrigatório, existência/papel/atividade do estagiário e
+      supervisor) mora direto na rota; mantido fiel, mesmo sendo uma
+      exceção à regra geral do projeto (não é escopo desta migração
+      redesenhar a slice). `Assignment` ganhou relationships
+      `patient`/`intern`/`supervisor` (as duas últimas com
+      `foreign_keys=` explícito, já que ambas apontam pra `users`).
+      Verificado: ruff, mypy, 26 testes pytest. Servidor uvicorn real
+      comparado byte a byte com o Fastify: `GET /assignments` idêntico
+      (nomes decifrados, incluindo vínculo sem supervisor); `PATCH` sem
+      nenhum campo (`400`), com `supervisorId` inexistente (`400`
+      "Supervisor inválido ou inativo."), com `internId` apontando pra
+      um `SUPERVISOR` — papel errado (`400` "Estagiário inválido ou
+      inativo.") — mesma mensagem nos dois; atualização válida
+      persistida por um backend e lida corretamente pelo outro
+      (cross-backend); RBAC (`403` pra `INTERN`); `PATCH` com id
+      inexistente reproduz o MESMO `500` genérico nos dois backends —
+      característica pré-existente do original (a query de update não
+      checa existência antes, deixando a exceção subir sem tratamento
+      dedicado), não corrigida aqui de propósito.
+
+## Status: migração completa (11/11 slices)
+
+Todas as 11 slices da spec (`docs/specs/migracao-backend-python.md`) estão
+migradas e validadas ao vivo contra o Fastify original, rodando lado a lado
+na mesma base SQL Server local (`health`, `auth`+`users`, `appointments`,
+`disciplinas`, `rooms`, `patients`, `screening`, `enrollment`, `matching`,
+`documents`, `assignments`). Achados relevantes ao longo da migração, já
+documentados nas entradas acima: um bug de arredondamento de milissegundos
+(`UtcDatetime`, corrigido, retroativo a toda resposta com data/hora), um
+gap de validação de corpo de requisição (`RequestValidationError` sem
+handler dedicado — 422 genérico do FastAPI em vez do 400
+`{code, message, correlation_id}` do ajv; corrigido, retroativo a todas as
+slices), um bug de sessão do SQLAlchemy em `with_rls_context` (corrigido,
+código compartilhado), um bug de fuso horário no cálculo de próxima
+ocorrência de disponibilidade recorrente (corrigido, `next_occurrence.py`),
+e dois bugs PRÉ-EXISTENTES do Fastify original reproduzidos fielmente e
+NÃO corrigidos por decisão deliberada (a spec pede reproduzir o contrato,
+não redesenhar): `rooms.listWithStatus()` nunca mostra ocupação real
+(falta `withRlsContext`) e `PATCH /assignments/{id}` com id inexistente
+retorna `500` genérico em vez de `404`.
+
+O Fastify (`pep/apps/api`) continua sendo o backend real em produção — a
+decisão de promover este backend a produção (e quando) é do usuário, não
+desta migração. Itens em aberto antes de considerar isso: cobertura de
+testes automatizados mais ampla (hoje concentrada em `auth`, com o resto
+validado só por teste ao vivo manual), CI configurado neste repo (hoje
+inexistente, mesma situação do `pep/apps/api` original), e uma decisão
+explícita do usuário sobre corrigir ou não os dois bugs pré-existentes
+listados acima (em ambos os backends, já que são do contrato original,
+não desta migração).

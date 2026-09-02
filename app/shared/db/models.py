@@ -225,6 +225,10 @@ class Assignment(Base):
     active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
 
+    patient: Mapped[Patient] = relationship(Patient, lazy="joined")
+    intern: Mapped[User] = relationship(User, foreign_keys=[intern_id], lazy="joined")
+    supervisor: Mapped[User | None] = relationship(User, foreign_keys=[supervisor_id], lazy="joined")
+
 
 # Tabela de junção do relacionamento implícito m:n coAuthors do Prisma
 # (`User[] @relation("DocumentCoAuthors")` em ClinicalDocument) — Prisma

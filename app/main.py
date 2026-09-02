@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from .features.appointments.presentation.routes import router as appointments_router
+from .features.assignments.presentation.routes import router as assignments_router
 from .features.auth.presentation.routes import router as auth_router
 from .features.auth.presentation.user_routes import router as user_router
 from .features.disciplinas.presentation.routes import router as disciplinas_router
@@ -83,8 +84,9 @@ def create_app() -> FastAPI:
     app.include_router(enrollment_router)
     app.include_router(matching_router)
     app.include_router(documents_router)
-    # assignments — entra aqui conforme for migrada (ver spec:
-    # docs/specs/migracao-backend-python.md).
+    app.include_router(assignments_router)
+    # Todas as 11 slices da spec (docs/specs/migracao-backend-python.md)
+    # estão migradas neste ponto.
 
     return app
 
