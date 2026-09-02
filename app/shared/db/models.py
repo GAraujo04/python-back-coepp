@@ -20,7 +20,7 @@ from datetime import UTC, date, datetime
 
 from sqlalchemy import Date, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -94,3 +94,32 @@ class Patient(Base):
     birth_date: Mapped[date | None] = mapped_column(Date, name="birth_date", default=None)
     # full_name_enc, cpf_enc, guardian_*, has_disability etc. entram quando
     # a slice patients for migrada — não usados pelo login.
+
+
+class Room(Base):
+    __tablename__ = "rooms"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    name: Mapped[str] = mapped_column(String, unique=True)
+    active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+
+class Appointment(Base):
+    __tablename__ = "appointments"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    patient_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("patients.id"), name="patient_id"
+    )
+    intern_id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="intern_id")
+    room_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("rooms.id"), name="room_id", default=None
+    )
+    scheduled_at: Mapped[datetime] = mapped_column(DateTime, name="scheduled_at")
+    status: Mapped[str] = mapped_column(String, default="SCHEDULED")
+    notes: Mapped[str | None] = mapped_column(String, default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
+
+    room: Mapped[Room | None] = relationship(Room, lazy="joined")

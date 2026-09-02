@@ -64,6 +64,15 @@ migradas até aqui:
       validados com sucesso pelo Fastify (mesmo `JWT_SECRET`/algoritmo) e
       vice-versa. 26 testes automatizados (pytest) portando os cenários
       dos arquivos vitest originais de `login-user`/`intern-login`.
+- [x] `appointments` (`POST/GET /appointments`, `PATCH /appointments/{id}/attendance`)
+      — primeira slice a exercitar RLS de verdade
+      (`SECURITY POLICY`/`SESSION_CONTEXT` do SQL Server). Testada ao vivo:
+      estagiário dono vê o próprio agendamento, supervisor com vínculo
+      ativo na paciente também vê (mesmo sem ser o estagiário dela),
+      paciente não vê nada (sem cláusula PATIENT na policy — fail-closed) —
+      os 3 resultados batem exatamente com a função SQL lida na migration.
+      Conflito de sala (409), transição de status inválida (409) e RBAC
+      (403) também testados contra o banco real.
 
 O Fastify (`pep/apps/api`) continua sendo o backend real em produção — este
 repo não substitui nada até todas as 11 slices estarem migradas e validadas.
