@@ -18,7 +18,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, String, func
+from sqlalchemy import Date, DateTime, ForeignKey, LargeBinary, String, func
 from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -92,8 +92,18 @@ class Patient(Base):
     )
     cpf_hash: Mapped[str | None] = mapped_column(String, name="cpf_hash", unique=True, default=None)
     birth_date: Mapped[date | None] = mapped_column(Date, name="birth_date", default=None)
-    # full_name_enc, cpf_enc, guardian_*, has_disability etc. entram quando
-    # a slice patients for migrada — não usados pelo login.
+    full_name_enc: Mapped[bytes] = mapped_column(LargeBinary, name="full_name_enc")
+    # cpf_enc, guardian_*, has_disability etc. entram quando a slice
+    # patients (escrita) for migrada — não usados pela leitura/login.
+
+
+class Disciplina(Base):
+    __tablename__ = "disciplinas"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    name: Mapped[str] = mapped_column(String, unique=True)
+    active: Mapped[bool] = mapped_column(default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
 
 
 class Room(Base):
