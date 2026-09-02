@@ -1,0 +1,76 @@
+"""Modelos Pydantic do slice matching.
+
+Porta features/matching/presentation/routes.ts (schemas inline no
+Fastify original).
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+
+from pydantic import Field
+
+from ....shared.http.camel_model import CamelModel
+
+WarningCode = Literal[
+    "TIME_INCOMPATIBLE_PATIENT", "TIME_INCOMPATIBLE_INTERN", "ROOM_OCCUPIED", "PATIENT_ALREADY_ASSIGNED"
+]
+
+
+class WarningOut(CamelModel):
+    code: WarningCode
+    message: str
+
+
+class MatchResultOut(CamelModel):
+    appointment_id: str
+    intern_id: str
+    patient_id: str
+    room_id: str | None
+    scheduled_at: str
+
+
+class RunMatchingResponse(CamelModel):
+    matched: int
+    results: list[MatchResultOut]
+
+
+class MatchViewOut(CamelModel):
+    appointment_id: str
+    scheduled_at: str
+    status: str
+    intern_name: str
+    patient_name: str
+    room_name: str | None
+
+
+class MatchSuggestionOut(CamelModel):
+    patient_id: str
+    patient_name: str
+    intern_id: str
+    intern_name: str
+    room_id: str
+    room_name: str
+    scheduled_at: str
+
+
+class PendingMatchRequestOut(CamelModel):
+    id: str
+    patient_name: str
+    suggested_intern_name: str | None
+    suggested_at: str | None
+    status: str
+    created_at: str
+
+
+class CreateManualMatchRequest(CamelModel):
+    patient_id: str
+    intern_id: str
+    scheduled_at: str
+    room_id: str | None = None
+    acknowledge_warnings: bool = False
+
+
+class CreateManualMatchResponse(CamelModel):
+    appointment_id: str
+    warnings: list[WarningOut] = Field(default_factory=list)

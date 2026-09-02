@@ -152,5 +152,62 @@ migradas até aqui:
       idêntico nos dois backends (mesma linha final no banco); RBAC
       (`403` pra ADMIN) e conflito de e-mail (`409`) também batendo.
 
+- [x] `matching` (`POST /matching/run`, `GET /matching/matches`,
+      `GET /matching/suggestions`, `GET /matching/pending-requests`,
+      `PATCH /matching/pending-requests/{id}/resolve`, `POST /matching/manual`)
+      — motor de pareamento automático (item 2/6) + fallback por
+      aproximação (item 5) + match manual (item 7). Com `domain/` no
+      original (única das últimas 4 slices que tem).
+      **Achado importante de fuso horário, corrigido**: `next-occurrence.ts`
+      calcula "próxima ocorrência" usando os getters/setters LOCAIS de
+      `Date` — internamente um instante UTC, então o resultado "parece"
+      hora local mas o Node grava UTC de verdade no banco. Confirmado
+      empiricamente ANTES de portar (script isolado): um `Date` com
+      `setHours(14,30)` às 12h em São Paulo (UTC-3) foi lido de volta do
+      banco, via `SELECT CONVERT` cru, como `17:30:00`. Python não tem
+      essa conversão automática — `next_occurrence`/`time_of_day` fazem a
+      conversão local→UTC (e UTC→local, no sentido inverso) explicitamente
+      (`astimezone()`), verificado batendo com o valor gravado pelo
+      Fastify pro mesmo horário de janela de disponibilidade.
+      **Bug de sessão SQLAlchemy encontrado e corrigido (afeta código
+      compartilhado, não só matching)**: `with_rls_context` chamava
+      `session.begin()` incondicionalmente, presumindo ser sempre a
+      PRIMEIRA operação da Session — verdade em todas as slices
+      anteriores, mas não em `RunMatching`, que lê `patients`/`users`/
+      `rooms` (sem RLS) ANTES de escrever em `appointments` (com RLS na
+      mesma Session por-request). A leitura anterior já tinha
+      "autobegin"ado uma transação implícita (padrão do SQLAlchemy 2.0),
+      e o `session.begin()` aninhado lançava
+      `InvalidRequestError: A transaction is already begun`. Corrigido
+      para só chamar `session.begin()` se `not session.in_transaction()`.
+      **Achado retroativo, corrigido para TODAS as 9 slices já migradas**:
+      erro de validação de corpo de requisição (campo obrigatório
+      ausente, tipo errado etc.) não tinha handler dedicado — o FastAPI
+      caía no seu 422 padrão (`{"detail": [...]}`), divergindo do 400
+      `{"code": "validation_failed", "message": ..., "correlation_id": ...}`
+      que o ajv do Fastify sempre produz. Adicionado um
+      `RequestValidationError` handler em `shared/http/error_handler.py`
+      (infra compartilhada — vale pra toda slice já migrada e as
+      futuras) que normaliza pro mesmo formato; o caso mais comum (campo
+      obrigatório ausente) usa a MESMA frase do ajv
+      (`"body must have required property 'x'"`, confirmado idêntico
+      byte a byte); os demais tipos de erro usam uma mensagem legível
+      derivada do Pydantic (não é uma réplica byte a byte de todo
+      dialeto do ajv, mas o código/status/formato do contrato batem
+      sempre). Verificado: ruff, mypy, 26 testes pytest. Servidor
+      uvicorn real comparado byte a byte com o Fastify (mesma base,
+      pacientes/estagiário/sala de teste criados direto no banco):
+      pareamento automático com sucesso (Assignment + Appointment
+      criados, horário local→UTC batendo); o mesmo cenário de "sala
+      escolhida pelo algoritmo colide com uma appointment já persistida
+      de uma rodada anterior" reproduz o MESMO `409 conflict` nos dois
+      backends (não é bug — é uma característica do algoritmo puro, que
+      não conhece o estado do banco até a escrita real); `GET
+      /matching/matches`, `/suggestions` e `/pending-requests` idênticos
+      byte a byte; `PATCH .../resolve` idempotente; `POST
+      /matching/manual` com avisos bloqueando sem `acknowledgeWarnings`,
+      confirmando com `acknowledgeWarnings=true`, `404` para
+      paciente/estagiário inexistente (mesma mensagem nos dois).
+
 O Fastify (`pep/apps/api`) continua sendo o backend real em produção — este
 repo não substitui nada até todas as 11 slices estarem migradas e validadas.

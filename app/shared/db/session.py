@@ -61,8 +61,22 @@ def with_rls_context[T](session: Session, user_id: str, role: str, fn: Callable[
     """Executa `fn` dentro de uma transação com o contexto de RLS setado
     (app_user_id / app_role). As SECURITY POLICIES do SQL Server leem esses
     valores via SESSION_CONTEXT() — última linha de defesa de autorização:
-    mesmo uma falha na aplicação não vaza linhas de outro vínculo."""
-    with session.begin():
+    mesmo uma falha na aplicação não vaza linhas de outro vínculo.
+
+    `session.begin()` só é chamado se AINDA não houver uma transação em
+    andamento nesta Session — o SQLAlchemy 2.0 "autobegin" já abre uma
+    implicitamente no primeiro `execute()`/`scalars()`, mesmo sem
+    `with_rls_context`. Isso importa porque nem todo repositório usa
+    `with_rls_context` em TODA leitura (só as sensíveis a RLS — ex.:
+    `patients`/`users`/`rooms` não têm SECURITY POLICY, então
+    `SqlAlchemyMatchingRepository.candidate_patients()` lê direto, sem
+    contexto); quando uma dessas leituras "soltas" roda ANTES, na mesma
+    Session por-request, `session.begin()` aninhado lançaria
+    `InvalidRequestError` ("A transaction is already begun") — descoberto
+    ao vivo em RunMatching, cujo `execute()` lê patients/interns/rooms sem
+    RLS e só DEPOIS chama `create_match` (que precisa de RLS)."""
+
+    def _set_context_and_run() -> T:
         session.execute(
             text("EXEC sp_set_session_context @key = N'app_user_id', @value = :user_id"),
             {"user_id": user_id},
@@ -72,3 +86,8 @@ def with_rls_context[T](session: Session, user_id: str, role: str, fn: Callable[
             {"role": role},
         )
         return fn(session)
+
+    if session.in_transaction():
+        return _set_context_and_run()
+    with session.begin():
+        return _set_context_and_run()

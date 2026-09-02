@@ -3,6 +3,14 @@ formato que `Date.prototype.toISOString()` produz no Node
 (`scheduledAt.toISOString()` em appointments/presentation/routes.ts, e
 equivalentes nas outras slices).
 
+`to_iso_utc()` é exportada separadamente (não só via o tipo Pydantic)
+porque algumas slices do original chamam `.toISOString()` diretamente
+dentro da APPLICATION layer, não só na serialização do schema de
+resposta (ex.: `MatchResult.scheduledAt` em
+matching/application/run-matching.ts já é uma string ISO pronta, não um
+`Date` cru) — usar a mesma função garante que os dois casos produzam
+exatamente o mesmo formato.
+
 Todo datetime armazenado neste projeto é *naive* (sem tzinfo) representando
 UTC — decisão tomada na slice auth por causa do SQL Server/pyodbc (ver
 shared/db/models.py e sqlalchemy_refresh_token_store.py). Sem este tipo, o
@@ -21,7 +29,7 @@ from typing import Annotated
 from pydantic import PlainSerializer
 
 
-def _to_iso_utc(dt: datetime) -> str:
+def to_iso_utc(dt: datetime) -> str:
     # Node's Date.prototype.toISOString() sempre usa 3 casas decimais
     # (milissegundos) — Python's isoformat() usa 6 (microssegundos) quando
     # o valor não é exatamente redondo. O driver do Node (mssql/Prisma) já
@@ -35,4 +43,4 @@ def _to_iso_utc(dt: datetime) -> str:
     return truncated.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
-UtcDatetime = Annotated[datetime, PlainSerializer(_to_iso_utc, return_type=str)]
+UtcDatetime = Annotated[datetime, PlainSerializer(to_iso_utc, return_type=str)]

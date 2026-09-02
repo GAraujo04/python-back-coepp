@@ -70,6 +70,10 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
 
+    availability_windows: Mapped[list[AvailabilityWindow]] = relationship(
+        "AvailabilityWindow", primaryjoin="User.id == foreign(AvailabilityWindow.intern_id)", lazy="selectin"
+    )
+
 
 class RefreshSession(Base):
     __tablename__ = "refresh_sessions"
@@ -106,6 +110,9 @@ class Patient(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
 
     disabilities: Mapped[list[PatientDisability]] = relationship("PatientDisability", lazy="selectin")
+    availability_windows: Mapped[list[AvailabilityWindow]] = relationship(
+        "AvailabilityWindow", primaryjoin="Patient.id == foreign(AvailabilityWindow.patient_id)", lazy="selectin"
+    )
 
 
 class Disciplina(Base):
@@ -144,6 +151,8 @@ class Appointment(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
 
     room: Mapped[Room | None] = relationship(Room, lazy="joined")
+    patient: Mapped[Patient] = relationship(Patient, lazy="joined")
+    intern: Mapped[User] = relationship(User, lazy="joined")
 
 
 class PatientDisability(Base):
@@ -258,6 +267,26 @@ class ClinicalDocument(Base):
     signatures: Mapped[list[DocumentSignature]] = relationship(
         "DocumentSignature", order_by="DocumentSignature.signed_at", lazy="selectin"
     )
+
+
+class PendingMatchRequest(Base):
+    __tablename__ = "pending_match_requests"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    patient_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("patients.id"), name="patient_id"
+    )
+    # nulo se não havia nenhum estagiário com disponibilidade cadastrada
+    suggested_intern_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="suggested_intern_id", default=None
+    )
+    suggested_at: Mapped[datetime | None] = mapped_column(DateTime, name="suggested_at", default=None)
+    status: Mapped[str] = mapped_column(String, default="pendente_ajuste_manual")
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime, name="resolved_at", default=None)
+
+    patient: Mapped[Patient] = relationship(Patient, lazy="joined")
+    suggested_intern: Mapped[User | None] = relationship(User, lazy="joined")
 
 
 class DocumentSignature(Base):
