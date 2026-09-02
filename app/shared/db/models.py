@@ -1,0 +1,96 @@
+"""Modelos SQLAlchemy (mapeamento ORM ↔ tabelas).
+
+Porta prisma/schema.prisma. Fica num arquivo central em shared/db/, não
+espalhado por slice — mesma decisão estrutural do `schema.prisma` original,
+que também é um arquivo único descrevendo TODAS as tabelas (o próprio
+Prisma não organiza schema por slice; só os *repositórios* que usam cada
+model são organizados por slice, em `infrastructure/`).
+
+Cresce incrementalmente: só os campos que as slices já migradas precisam
+são mapeados aqui — os demais (ex.: PII cifrada do Patient, colunas de
+outras tabelas) entram quando a slice correspondente for migrada. Isso é
+seguro porque o SQLAlchemy não exige mapear 100% das colunas de uma
+tabela para fazer SELECT nela.
+"""
+
+from __future__ import annotations
+
+import uuid
+from datetime import UTC, date, datetime
+
+from sqlalchemy import Date, DateTime, ForeignKey, String, func
+from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+def _new_uuid() -> str:
+    """Gera o id no lado da aplicação (igual ao `@default(uuid())` do
+    Prisma) — não delega ao banco (`NEWID()`), pra manter o mesmo formato
+    (uuid4 minúsculo) que o Node já grava."""
+    return str(uuid.uuid4())
+
+
+def _now() -> datetime:
+    """Equivalente ao `@updatedAt` do Prisma: calculado na APLICAÇÃO a cada
+    escrita, não por um DEFAULT/trigger do banco — confirmado lendo a
+    migration (`updated_at DATETIME2 NOT NULL`, sem `DEFAULT`, diferente de
+    `created_at`, que tem `DEFAULT CURRENT_TIMESTAMP`). Usar server_default
+    aqui causaria o INSERT falhar (coluna NOT NULL sem valor nem default)."""
+    return datetime.now(UTC).replace(tzinfo=None)
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    role: Mapped[str] = mapped_column(String)
+    full_name: Mapped[str] = mapped_column(String, name="full_name")
+    email: Mapped[str] = mapped_column(String, unique=True)
+    crp: Mapped[str | None] = mapped_column(String, default=None)
+    ra: Mapped[str | None] = mapped_column(String, default=None)
+    totvs_usuario: Mapped[str | None] = mapped_column(String, name="totvs_usuario", unique=True, default=None)
+    phone: Mapped[str | None] = mapped_column(String, default=None)
+    department: Mapped[str | None] = mapped_column(String, default=None)
+    password_hash: Mapped[str | None] = mapped_column(String, name="password_hash", default=None)
+    active: Mapped[bool] = mapped_column(default=True)
+    enrollment_verified: Mapped[bool] = mapped_column(name="enrollment_verified", default=False)
+    academic_supervisor_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="academic_supervisor_id", default=None
+    )
+    pending_supervisor_name: Mapped[str | None] = mapped_column(String, name="pending_supervisor_name", default=None)
+    disciplina_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), name="disciplina_id", default=None
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
+
+
+class RefreshSession(Base):
+    __tablename__ = "refresh_sessions"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    user_id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="user_id")
+    token_hash: Mapped[str] = mapped_column(String, name="token_hash", unique=True)
+    user_agent: Mapped[str | None] = mapped_column(String, name="user_agent", default=None)
+    ip: Mapped[str | None] = mapped_column(String, default=None)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, name="expires_at")
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime, name="revoked_at", default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+
+class Patient(Base):
+    __tablename__ = "patients"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    code: Mapped[str] = mapped_column(String, unique=True)
+    user_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="user_id", unique=True, default=None
+    )
+    cpf_hash: Mapped[str | None] = mapped_column(String, name="cpf_hash", unique=True, default=None)
+    birth_date: Mapped[date | None] = mapped_column(Date, name="birth_date", default=None)
+    # full_name_enc, cpf_enc, guardian_*, has_disability etc. entram quando
+    # a slice patients for migrada — não usados pelo login.

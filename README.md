@@ -55,6 +55,15 @@ migradas até aqui:
 - [x] `health` (`/health`, `/ready`, `/version`) — prova de conceito,
       testada ao vivo contra o SQL Server local e comparada byte a byte
       com a resposta do Fastify original.
+- [x] `auth` + `users` (`/auth/login`, `/auth/intern-login`, `/auth/patient-login`,
+      `/auth/refresh`, `/auth/logout`, `/auth/me`, `/users`, `/users/pending-supervisors`,
+      `/users/{id}/link-supervisor`) — a slice mais crítica do projeto
+      (TOTVS RM, JWT, refresh token rotativo, RBAC). Testada ao vivo contra
+      o SQL Server local para os 3 mecanismos de login (e-mail/senha,
+      CPF+nascimento, TOTVS mock), com tokens emitidos pelo Python
+      validados com sucesso pelo Fastify (mesmo `JWT_SECRET`/algoritmo) e
+      vice-versa. 26 testes automatizados (pytest) portando os cenários
+      dos arquivos vitest originais de `login-user`/`intern-login`.
 
 O Fastify (`pep/apps/api`) continua sendo o backend real em produção — este
 repo não substitui nada até todas as 11 slices estarem migradas e validadas.

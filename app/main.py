@@ -16,6 +16,8 @@ from __future__ import annotations
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from .features.auth.presentation.routes import router as auth_router
+from .features.auth.presentation.user_routes import router as user_router
 from .features.health.presentation.routes import router as health_router
 from .shared.config.env import load_env
 from .shared.http.correlation import CorrelationIdMiddleware
@@ -63,9 +65,11 @@ def create_app() -> FastAPI:
     # sondas de liveness/readiness costumam ficar na raiz por convenção de
     # orquestrador/reverse proxy).
     app.include_router(health_router)
-    # auth, users, appointments, screening, patients, enrollment, matching,
-    # documents, assignments, disciplinas, rooms — entram aqui conforme
-    # cada slice for migrada (ver spec: docs/specs/migracao-backend-python.md).
+    app.include_router(auth_router)
+    app.include_router(user_router)
+    # appointments, screening, patients, enrollment, matching, documents,
+    # assignments, disciplinas, rooms — entram aqui conforme cada slice for
+    # migrada (ver spec: docs/specs/migracao-backend-python.md).
 
     return app
 

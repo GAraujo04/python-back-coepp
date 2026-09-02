@@ -38,11 +38,21 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 def get_session() -> Iterator[Session]:
     """Sessão de escopo curto (uma por request) — equivalente ao dependency
     injection do Fastify de reusar `prisma`, mas aqui cada request ganha sua
-    própria Session (padrão SQLAlchemy, evita estado compartilhado entre
-    requests concorrentes)."""
+    própria Session (padrão SQLAlchemy: Session não é segura pra concorrência,
+    diferente do client do Prisma, que é um pool compartilhado — por isso os
+    repositórios/casos de uso são instanciados por REQUEST aqui, não uma vez
+    só no boot como no `authRoutes()` original).
+
+    Commit automático ao sair do `with` sem erro (equivalente ao Prisma, que
+    não exige commit explícito fora de `$transaction`); rollback automático
+    em caso de exceção — nenhuma escrita parcial fica pendurada."""
     session = SessionLocal()
     try:
         yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()
 
