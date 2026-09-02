@@ -24,11 +24,15 @@ from pydantic import PlainSerializer
 def _to_iso_utc(dt: datetime) -> str:
     # Node's Date.prototype.toISOString() sempre usa 3 casas decimais
     # (milissegundos) — Python's isoformat() usa 6 (microssegundos) quando
-    # o valor não é exatamente redondo. Arredonda pra milissegundos antes
-    # de formatar, pra bater exatamente com o que o Fastify já produz.
-    millis = round(dt.microsecond / 1000)
-    rounded = dt.replace(microsecond=0, tzinfo=UTC) + timedelta(milliseconds=millis)
-    return rounded.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    # o valor não é exatamente redondo. O driver do Node (mssql/Prisma) já
+    # TRUNCA (não arredonda) os microssegundos ao construir o `Date` a
+    # partir do valor do banco — então truncamos aqui também (floor via
+    # divisão inteira), não arredondamos, senão um valor como
+    # `.1375xx` vira `.138` no Python mas `.137` no Fastify (confirmado
+    # por teste ao vivo comparando a mesma linha lida pelos dois backends).
+    millis = dt.microsecond // 1000
+    truncated = dt.replace(microsecond=0, tzinfo=UTC) + timedelta(milliseconds=millis)
+    return truncated.isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
 UtcDatetime = Annotated[datetime, PlainSerializer(_to_iso_utc, return_type=str)]

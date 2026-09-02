@@ -73,6 +73,48 @@ migradas até aqui:
       os 3 resultados batem exatamente com a função SQL lida na migration.
       Conflito de sala (409), transição de status inválida (409) e RBAC
       (403) também testados contra o banco real.
+- [x] `disciplinas` + `rooms` (`GET/POST /disciplinas`, `GET /rooms`,
+      `PATCH /rooms/reassign`) — duas slices pequenas, sem `domain/`/`application`
+      no original (CRUD direto na rota), mantidas fiéis. Primeira vez que
+      `decrypt_field` roda numa consulta de listagem (nome do paciente na
+      sala ocupada). **Bug pré-existente encontrado e reproduzido
+      fielmente (não corrigido — spec pede reproduzir, não redesenhar):**
+      `listWithStatus()`/`list_with_status()` consulta `appointments`
+      direto, sem `withRlsContext`/`with_rls_context` — como a RLS de
+      `appointments` é fail-closed, a ocupação de sala mostrada nunca é
+      real, em nenhum dos dois backends (confirmado isolando a causa).
+      Registrado para decisão separada do usuário.
+- [x] `patients` (cadastro, listagem por vínculo, `GET /portal/me`) — primeira
+      vez que `encrypt_field`/`decrypt_field` (AES-256-GCM) são exercitados
+      de ponta a ponta contra dado real gravado pelo Node: nomes já
+      cadastrados pelo Fastify decifrados corretamente pelo Python, e um
+      paciente novo cadastrado pelo Python lido de volta certo pelo
+      Fastify. Escopo por vínculo (não é RLS de banco — `patients` não tem
+      `SECURITY POLICY` — é `WHERE` explícito via join em `assignments`,
+      igual ao TS) testado nos 2 papéis. `portal_data()` preserva a
+      decisão original de usar `with_rls_context(..., role="ADMIN")` fixo
+      (bypass deliberado, seguro porque a query já é escopada por
+      `patient.user_id`).
+- [x] `screening` (`POST/GET /screenings`, `GET/PATCH/DELETE /screenings/{id}`)
+      — triagens (`clinical_documents` do tipo `SCREENING_*`). Content
+      validado por Pydantic `.strict()` (schema fechado
+      adulto/criança, replica os Zod originais); concorrência otimista
+      por `version` testada ao vivo (`PATCH` com `expectedVersion` correto
+      funciona, com versão obsoleta retorna `409`). Confirmado por leitura
+      de uma segunda migration (`allow_author_delete_draft_document`) que
+      o `BLOCK PREDICATE` de `DELETE` foi relaxado depois da primeira —
+      autor/coautor pode apagar o próprio `RASCUNHO`, não só ADMIN — e
+      testado ao vivo (`204` pro autor, `404` por RLS pra estagiário sem
+      vínculo). **Bug de arredondamento encontrado e corrigido**: o
+      `UtcDatetime` compartilhado arredondava microssegundos pro
+      milissegundo mais próximo; o driver do Node trunca — corrigido para
+      truncar também (achado comparando `updatedAt` do mesmo registro
+      lido pelos dois backends, `.138Z` vs `.137Z`). Testado ao vivo:
+      criação com `numero` sequencial (`AAAA-NNNN`), rejeição de campo de
+      content desconhecido (`400`), leitura por supervisora com vínculo
+      via assignment, e os 3 casos de escopo negativo (`GET`/`LIST`/`DELETE`
+      por estagiário sem vínculo → `404`/lista vazia) comparados byte a
+      byte com o Fastify usando o mesmo token nos dois backends.
 
 O Fastify (`pep/apps/api`) continua sendo o backend real em produção — este
 repo não substitui nada até todas as 11 slices estarem migradas e validadas.

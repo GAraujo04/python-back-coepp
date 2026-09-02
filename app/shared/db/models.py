@@ -18,7 +18,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, date, datetime
 
-from sqlalchemy import Date, DateTime, ForeignKey, LargeBinary, String, func
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Table, Text, func
 from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -184,3 +184,63 @@ class Assignment(Base):
     )
     active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+
+# Tabela de junção do relacionamento implícito m:n coAuthors do Prisma
+# (`User[] @relation("DocumentCoAuthors")` em ClinicalDocument) — Prisma
+# cria essa tabela sozinho, com esse nome e colunas A/B exatos (A =
+# ClinicalDocument.id, B = User.id, ordem alfabética dos nomes dos
+# models). A RLS de clinical_documents (fn_documents_select) lê ela
+# diretamente por esse nome — não pode divergir.
+document_co_authors = Table(
+    "_DocumentCoAuthors",
+    Base.metadata,
+    Column("A", UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("clinical_documents.id"), primary_key=True),
+    Column("B", UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), primary_key=True),
+)
+
+
+class ClinicalDocument(Base):
+    __tablename__ = "clinical_documents"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    numero: Mapped[str | None] = mapped_column(String, unique=True, default=None)
+    patient_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("patients.id"), name="patient_id"
+    )
+    appointment_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("appointments.id"), name="appointment_id", default=None
+    )
+    author_id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="author_id")
+    type: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String, default="RASCUNHO")
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    content: Mapped[str] = mapped_column(Text, default="{}")
+    supersedes_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), name="supersedes_id", default=None
+    )
+    locked_at: Mapped[datetime | None] = mapped_column(DateTime, name="locked_at", default=None)
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
+
+    co_authors: Mapped[list[User]] = relationship("User", secondary=document_co_authors, lazy="selectin")
+    signatures: Mapped[list[DocumentSignature]] = relationship(
+        "DocumentSignature", order_by="DocumentSignature.signed_at", lazy="selectin"
+    )
+
+
+class DocumentSignature(Base):
+    __tablename__ = "document_signatures"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    document_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("clinical_documents.id"), name="document_id"
+    )
+    signer_id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="signer_id")
+    signer_role: Mapped[str] = mapped_column(String, name="signer_role")
+    signer_name: Mapped[str] = mapped_column(String, name="signer_name")
+    signer_ref: Mapped[str | None] = mapped_column(String, name="signer_ref", default=None)
+    content_hash: Mapped[str] = mapped_column(String, name="content_hash")
+    signature_hash: Mapped[str] = mapped_column(String, name="signature_hash")
+    provider: Mapped[str] = mapped_column(String, default="internal")
+    signed_at: Mapped[datetime] = mapped_column(DateTime, name="signed_at", server_default=func.now())
