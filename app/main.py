@@ -20,6 +20,7 @@ from .features.appointments.presentation.routes import router as appointments_ro
 from .features.auth.presentation.routes import router as auth_router
 from .features.auth.presentation.user_routes import router as user_router
 from .features.disciplinas.presentation.routes import router as disciplinas_router
+from .features.enrollment.presentation.routes import router as enrollment_router
 from .features.health.presentation.routes import router as health_router
 from .features.patients.presentation.routes import router as patients_router
 from .features.rooms.presentation.routes import router as rooms_router
@@ -77,9 +78,9 @@ def create_app() -> FastAPI:
     app.include_router(rooms_router)
     app.include_router(patients_router)
     app.include_router(screening_router)
-    # enrollment, matching, documents, assignments — entram aqui
-    # conforme cada slice for migrada (ver spec:
-    # docs/specs/migracao-backend-python.md).
+    app.include_router(enrollment_router)
+    # matching, documents, assignments — entram aqui conforme cada slice
+    # for migrada (ver spec: docs/specs/migracao-backend-python.md).
 
     return app
 

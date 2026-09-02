@@ -116,5 +116,41 @@ migradas até aqui:
       por estagiário sem vínculo → `404`/lista vazia) comparados byte a
       byte com o Fastify usando o mesmo token nos dois backends.
 
+- [x] `enrollment` (`POST /register/patient`, `POST /register/student`,
+      `GET /register/options`, `GET /register/responsibility-term`,
+      `PATCH /enrollment/complete-profile`,
+      `GET/PUT /enrollment/availability-windows`) — autocadastro público de
+      paciente/estagiário e edição da disponibilidade recorrente do
+      estagiário. Sem `domain/` no original, mantido fiel. Termo de
+      responsabilidade (Docs-as-Code) copiado verbatim pra
+      `docs/legal/` deste repo (confirmado idêntico via diff), já que
+      este é um repositório PRÓPRIO sem o monorepo `pep` como ancestral.
+      **Bug de path/regex encontrado e corrigido antes do primeiro teste
+      pegar** (nunca chegou a afetar o Fastify, só o meu próprio port): o
+      parser do front-matter usava `re.match` com `^` — falha porque o
+      arquivo real começa com um comentário HTML de aviso ANTES do bloco
+      `---`, não com `---` na primeira linha; o regex original em JS não
+      tem essa âncora. Corrigido pra `re.search` sem `^`, replicando o
+      comportamento exato do original. `ageInYears`/`EMAIL_RE` duplicados
+      deliberadamente aqui (não importados de `patients/`) — mesma decisão
+      de fronteira de slice do TS original. Verificado: ruff, mypy, 26
+      testes pytest (nenhum novo — cobertura desta slice foi só via teste
+      ao vivo). Servidor uvicorn real comparado byte a byte com o Fastify:
+      cadastro de paciente com disponibilidade (código sequencial
+      intercalado corretamente entre os dois backends, mesma sequência
+      `patient_counters`); rejeição de menor sem responsável e de janelas
+      sobrepostas (mesma mensagem); cadastro de estagiário com
+      `pendingSupervisorName`; conflito de versão do termo (`409`);
+      exigência de exatamente um supervisor (`400`); confirmado que um
+      estagiário AUTOCADASTRADO nunca consegue logar por e-mail/senha em
+      NENHUM dos dois backends — característica pré-existente do sistema
+      original (`LoginUser` rejeita `role === 'INTERN'` incondicionalmente,
+      TOTVS é o único caminho), não uma regressão da migração;
+      `GET/PUT /enrollment/availability-windows` e
+      `PATCH /enrollment/complete-profile` testados com um JWT assinado
+      localmente (mesmo `JWT_SECRET`) pra um INTERN real, com efeito
+      idêntico nos dois backends (mesma linha final no banco); RBAC
+      (`403` pra ADMIN) e conflito de e-mail (`409`) também batendo.
+
 O Fastify (`pep/apps/api`) continua sendo o backend real em produção — este
 repo não substitui nada até todas as 11 slices estarem migradas e validadas.

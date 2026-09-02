@@ -65,6 +65,8 @@ class User(Base):
     disciplina_id: Mapped[str | None] = mapped_column(
         UNIQUEIDENTIFIER(as_uuid=False), name="disciplina_id", default=None
     )
+    periodo: Mapped[str | None] = mapped_column(String, default=None)
+    turma: Mapped[str | None] = mapped_column(String, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
 
@@ -169,6 +171,35 @@ class AvailabilitySlot(Base):
     slot_at: Mapped[datetime] = mapped_column(DateTime, name="slot_at")
     matched: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+
+class AvailabilityWindow(Base):
+    """Disponibilidade recorrente por dia da semana (não é a data da
+    consulta — é o insumo do algoritmo de match). Distinta de
+    AvailabilitySlot (um horário concreto, já casado ou não)."""
+
+    __tablename__ = "availability_windows"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    patient_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("patients.id"), name="patient_id", default=None
+    )
+    intern_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="intern_id", default=None
+    )
+    weekday: Mapped[int] = mapped_column(Integer)
+    start_time: Mapped[str] = mapped_column(String, name="start_time")
+    end_time: Mapped[str] = mapped_column(String, name="end_time")
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+
+class TermAcceptance(Base):
+    __tablename__ = "term_acceptances"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    user_id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="user_id")
+    term_version: Mapped[str] = mapped_column(String, name="term_version")
+    accepted_at: Mapped[datetime] = mapped_column(DateTime, name="accepted_at", server_default=func.now())
 
 
 class Assignment(Base):
