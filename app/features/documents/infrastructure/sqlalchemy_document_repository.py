@@ -6,7 +6,6 @@ Porta features/documents/infrastructure/prisma-document-repository.ts.
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
@@ -15,6 +14,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ....shared.crypto.field_encryption import decrypt_field
+from ....shared.crypto.json_field import decrypt_json
 from ....shared.db.models import ClinicalDocument, DocumentApproval, DocumentSignature, ReviewComment, User
 from ....shared.db.session import with_rls_context
 from ..domain.document_status import DocStatus
@@ -118,7 +118,7 @@ class SqlAlchemyDocumentRepository:
                 author_id=doc.author_id,
                 co_author_ids=[u.id for u in doc.co_authors],
                 patient_id=doc.patient_id,
-                content=json.loads(doc.content),
+                content=decrypt_json(doc.content_enc),
             )
 
         return with_rls_context(self._session, actor_id, "ADMIN", _do)
@@ -206,7 +206,7 @@ class SqlAlchemyDocumentRepository:
                 patient_name=decrypt_field(r.patient.full_name_enc),
                 patient_code=r.patient.code,
                 updated_at=r.updated_at,
-                content=json.loads(r.content),
+                content=decrypt_json(r.content_enc),
                 comments=[
                     CommentView(id=c.id, body=c.body, reviewer_name=c.reviewer.full_name, created_at=c.created_at)
                     for c in r.comments

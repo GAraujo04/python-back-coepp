@@ -7,11 +7,10 @@ Porta features/documents/application/transition-document.ts.
 
 from __future__ import annotations
 
-import hashlib
-import json
 from dataclasses import dataclass
 
 from ....shared.audit.audit_recorder import AuditEvent, AuditRecorder
+from ....shared.crypto.json_field import content_digest
 from ....shared.errors.app_error import ForbiddenError, NotFoundError
 from ..domain.document_status import AUTHOR_ACTIONS, ActorRole, DocAction, resolve_transition
 from ..domain.signature_provider import SignaturePayload, SignatureProvider
@@ -59,14 +58,13 @@ class TransitionDocument:
                 raise ForbiddenError("Apenas o autor ou coautor pode executar esta ação.")
 
         lock = to == "APROVADO_LOCKED"
-        # separators sem espaço, igual ao JSON.stringify do JS por padrão —
-        # o hash precisa ser byte-idêntico ao que o outro backend produziria
-        # pro MESMO conteúdo, senão as assinaturas dos dois nunca bateriam
-        # (ainda que cada backend só verifique a própria, é a mesma
-        # convenção usada em screening/patients pra paridade de contrato).
-        content_hash = hashlib.sha256(
-            json.dumps(doc.content, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-        ).hexdigest()
+        # A canonicalização vive em shared/crypto/json_field.py desde que o
+        # conteúdo passou a ser cifrado: o MESMO dígito é gravado em
+        # clinical_documents.content_hash (o que o trigger de imutabilidade
+        # compara) e usado aqui na assinatura. Fossem dois cálculos
+        # separados, bastaria um divergir pra "o documento mudou desde a
+        # aprovação" passar a responder diferente em cada lugar.
+        content_hash = content_digest(doc.content)
 
         write = TransitionWrite(id=input.document_id, to_status=to, lock=lock)
         if lock:

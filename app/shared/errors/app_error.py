@@ -52,6 +52,15 @@ class ConflictError(AppError):
     status_code = 409
 
 
+class TooManyRequestsError(AppError):
+    """Rate limit / bloqueio temporário por tentativas falhas. Distinto de
+    401: a credencial pode até estar certa, o que negamos é a FREQUÊNCIA.
+    Tratar como 401 esconderia do cliente que basta esperar."""
+
+    code = "rate_limited"
+    status_code = 429
+
+
 class ServiceUnavailableError(AppError):
     """Dependência externa indisponível (ex.: TOTVS RM fora do ar/timeout) —
     erro temporário, distinto de credencial inválida (não confundir com 401)."""

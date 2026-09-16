@@ -98,7 +98,7 @@ def _to_disability_summaries(rows: list[PatientDisability]) -> list[DisabilitySu
 
 
 def _to_summary(row: Patient) -> PatientSummary:
-    birth_date = row.birth_date.isoformat() if row.birth_date else None
+    birth_date = decrypt_field(row.birth_date_enc) if row.birth_date_enc else None
     return PatientSummary(
         id=row.id,
         code=row.code,
@@ -134,12 +134,12 @@ class SqlAlchemyPatientRepository:
             code=code,
             full_name_enc=encrypt_field(data.full_name),
             cpf_enc=encrypt_field(data.cpf) if data.cpf else None,
-            birth_date=date.fromisoformat(data.birth_date) if data.birth_date else None,
-            phone=data.phone,
+            birth_date_enc=encrypt_field(data.birth_date) if data.birth_date else None,
+            phone_enc=encrypt_field(data.phone) if data.phone else None,
             guardian_name_enc=encrypt_field(data.guardian.name) if data.guardian and data.guardian.name else None,
             guardian_cpf_enc=encrypt_field(data.guardian.cpf) if data.guardian and data.guardian.cpf else None,
             guardian_relationship=data.guardian.relationship if data.guardian else None,
-            guardian_phone=data.guardian.phone if data.guardian else None,
+            guardian_phone_enc=encrypt_field(data.guardian.phone) if data.guardian and data.guardian.phone else None,
             has_disability=data.has_disability,
         )
         row.disabilities = [

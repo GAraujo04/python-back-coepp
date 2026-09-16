@@ -30,7 +30,13 @@ from app.features.auth.domain.user_repository import (
     UserRepository,
 )
 from app.shared.audit.audit_recorder import AuditEvent, AuditRecorder
-from app.shared.errors.app_error import ForbiddenError, ServiceUnavailableError, UnauthorizedError, ValidationError
+from app.shared.errors.app_error import (
+    ForbiddenError,
+    ServiceUnavailableError,
+    TooManyRequestsError,
+    UnauthorizedError,
+    ValidationError,
+)
 
 RM_VALIDO = "12345678901"
 
@@ -259,9 +265,12 @@ def test_usuario_com_menos_de_11_digitos_rejeitado_antes_do_totvs() -> None:
 
 
 def test_bloqueia_por_tentativas_antes_de_chamar_totvs() -> None:
+    """Bloqueio devolve 429 (rate_limited), não 401: a credencial pode até
+    estar correta — o que negamos é a frequência. Devolver 401 aqui diria
+    ao usuário legítimo que a senha está errada, e ele a trocaria à toa."""
     use_case, _, _, attempts, _ = build()
     attempts.locked = True
-    with pytest.raises(UnauthorizedError):
+    with pytest.raises(TooManyRequestsError):
         use_case.execute(INPUT)
 
 

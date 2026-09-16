@@ -16,9 +16,9 @@ tabela para fazer SELECT nela.
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 
-from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Table, Text, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, LargeBinary, String, Table, Text, func
 from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -99,12 +99,21 @@ class Patient(Base):
     full_name_enc: Mapped[bytes] = mapped_column(LargeBinary, name="full_name_enc")
     cpf_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="cpf_enc", default=None)
     cpf_hash: Mapped[str | None] = mapped_column(String, name="cpf_hash", unique=True, default=None)
-    birth_date: Mapped[date | None] = mapped_column(Date, name="birth_date", default=None)
-    phone: Mapped[str | None] = mapped_column(String, default=None)
+    # Data de nascimento cifrada: é METADE da credencial de login do
+    # paciente (o outro fator é o CPF, também cifrado). Em claro, quem
+    # lesse a tabela já teria um dos dois fatores de toda a base. Guardada
+    # como texto ISO (yyyy-mm-dd), que é a forma em que todos os
+    # consumidores já a usavam — nenhuma query filtra ou ordena por ela.
+    birth_date_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="birth_date_enc", default=None)
+    phone_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="phone_enc", default=None)
     guardian_name_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="guardian_name_enc", default=None)
     guardian_cpf_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="guardian_cpf_enc", default=None)
+    # guardian_relationship fica em claro de propósito: é um rótulo curto e
+    # fechado ("mãe", "pai", "responsável legal") que não identifica
+    # ninguém sozinho — cifrar custaria a mesma complexidade sem proteger
+    # nada que já não esteja protegido pelo nome do responsável.
     guardian_relationship: Mapped[str | None] = mapped_column(String, name="guardian_relationship", default=None)
-    guardian_phone: Mapped[str | None] = mapped_column(String, name="guardian_phone", default=None)
+    guardian_phone_enc: Mapped[bytes | None] = mapped_column(LargeBinary, name="guardian_phone_enc", default=None)
     has_disability: Mapped[bool] = mapped_column(name="has_disability", default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
@@ -259,7 +268,13 @@ class ClinicalDocument(Base):
     type: Mapped[str] = mapped_column(String)
     status: Mapped[str] = mapped_column(String, default="RASCUNHO")
     version: Mapped[int] = mapped_column(Integer, default=1)
-    content: Mapped[str] = mapped_column(Text, default="{}")
+    # Conteúdo clínico cifrado (AES-256-GCM) — ver shared/crypto/json_field.py.
+    # Era NVARCHAR(MAX) em claro até a migration 0001_encrypt_clinical_content.
+    content_enc: Mapped[bytes] = mapped_column(LargeBinary, name="content_enc")
+    # SHA-256 do conteúdo EM CLARO. Existe porque o ciphertext muda a cada
+    # escrita (IV aleatório), e o trigger de imutabilidade precisa de algo
+    # estável pra comparar. Mesmo valor que vai para a assinatura.
+    content_hash: Mapped[str] = mapped_column(String, name="content_hash")
     supersedes_id: Mapped[str | None] = mapped_column(
         UNIQUEIDENTIFIER(as_uuid=False), name="supersedes_id", default=None
     )

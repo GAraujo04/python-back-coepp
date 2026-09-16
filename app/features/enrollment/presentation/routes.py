@@ -1,7 +1,10 @@
 """Rotas de autocadastro. A maioria é pública (sem autenticação) — exceção
 é PATCH /enrollment/complete-profile e as rotas de disponibilidade, que
 exigem sessão de estagiário (só mexem no PRÓPRIO cadastro, nunca no de
-outra pessoa). Rate limit global se aplica às públicas.
+outra pessoa). As públicas ficam sob o rate limit por IP do middleware
+(shared/http/rate_limit.py), com um balde próprio e mais estreito —
+aqui o abuso é o volume de cadastros, não a tentativa de adivinhar
+credencial.
 
 Porta features/enrollment/presentation/routes.ts.
 """

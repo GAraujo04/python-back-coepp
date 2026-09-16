@@ -31,6 +31,7 @@ from .features.screening.presentation.routes import router as screening_router
 from .shared.config.env import load_env
 from .shared.http.correlation import CorrelationIdMiddleware
 from .shared.http.error_handler import register_error_handlers
+from .shared.http.rate_limit import RateLimitMiddleware
 
 
 def create_app() -> FastAPI:
@@ -58,6 +59,17 @@ def create_app() -> FastAPI:
         redoc_url=None,
     )
 
+    # A ORDEM aqui é significativa e não é a de leitura: `add_middleware`
+    # insere no topo da pilha, então o ÚLTIMO registrado é o mais EXTERNO.
+    # A pilha resultante (de fora pra dentro) é
+    # CorrelationId -> CORS -> RateLimit -> rotas, e é a única que faz a
+    # resposta 429 sair correta: o correlation_id precisa já estar em
+    # `request.state` quando o rate limit rejeita (por isso CorrelationId é
+    # externo a ele), e o 429 precisa sair com os cabeçalhos de CORS, senão
+    # o navegador esconde o erro atrás de uma falha de CORS e o usuário vê
+    # "erro de rede" em vez de "muitas tentativas" (por isso o CORS também
+    # é externo a ele).
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[o.strip() for o in env.CORS_ORIGIN.split(",")],

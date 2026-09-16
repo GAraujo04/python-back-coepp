@@ -15,7 +15,13 @@ from datetime import datetime
 from typing import Literal
 
 from ....shared.audit.audit_recorder import AuditEvent, AuditRecorder
-from ....shared.errors.app_error import ForbiddenError, ServiceUnavailableError, UnauthorizedError, ValidationError
+from ....shared.errors.app_error import (
+    ForbiddenError,
+    ServiceUnavailableError,
+    TooManyRequestsError,
+    UnauthorizedError,
+    ValidationError,
+)
 from ..domain.user_repository import UserRepository
 from .ports import (
     AccessTokenPayload,
@@ -96,7 +102,7 @@ class InternLogin:
         user_key = f"rm:{input.usuario_rm}"
         ip_key = f"ip:{input.meta.ip or 'unknown'}"
         if self._attempts.is_locked(user_key) or self._attempts.is_locked(ip_key):
-            raise UnauthorizedError("Muitas tentativas. Tente novamente mais tarde.")
+            raise TooManyRequestsError("Muitas tentativas. Tente novamente mais tarde.")
 
         def record_failure(reason: str) -> None:
             self._attempts.record_failure(user_key)

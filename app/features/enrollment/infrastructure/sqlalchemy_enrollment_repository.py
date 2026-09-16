@@ -11,7 +11,6 @@ repositório; mantido fiel.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -141,12 +140,12 @@ class SqlAlchemyEnrollmentRepository:
             full_name_enc=encrypt_field(data.full_name),
             cpf_enc=encrypt_field(data.cpf),
             cpf_hash=cpf_blind_index(data.cpf),  # índice cego p/ login por CPF
-            birth_date=date.fromisoformat(data.birth_date),
-            phone=data.phone,
+            birth_date_enc=encrypt_field(data.birth_date),
+            phone_enc=encrypt_field(data.phone) if data.phone else None,
             guardian_name_enc=encrypt_field(data.guardian.name) if data.guardian and data.guardian.name else None,
             guardian_cpf_enc=encrypt_field(data.guardian.cpf) if data.guardian and data.guardian.cpf else None,
             guardian_relationship=data.guardian.relationship if data.guardian else None,
-            guardian_phone=data.guardian.phone if data.guardian else None,
+            guardian_phone_enc=encrypt_field(data.guardian.phone) if data.guardian and data.guardian.phone else None,
             has_disability=data.has_disability,
         )
         patient.disabilities = [

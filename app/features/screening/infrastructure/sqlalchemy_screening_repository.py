@@ -6,15 +6,17 @@ Porta features/screening/infrastructure/prisma-screening-repository.ts.
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
+from typing import get_args
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from ....shared.crypto.json_field import content_digest, decrypt_json, encrypt_json
 from ....shared.db.models import ClinicalDocument, User
 from ....shared.db.session import with_rls_context
 from ....shared.errors.app_error import ConflictError, NotFoundError
+from ..domain.screening_content import ScreeningType
 from ..domain.screening_repository import (
     AccessContext,
     NewScreening,
@@ -23,7 +25,10 @@ from ..domain.screening_repository import (
     SignatureInfo,
 )
 
-_SCREENING_TYPES = ("SCREENING_ADULT", "SCREENING_CHILD")
+# Deriva do Literal do domínio em vez de repetir a lista: um tipo novo
+# aparece na listagem sozinho, sem depender de alguém lembrar deste
+# arquivo (era o que faria o documento ser criado e nunca listado).
+_SCREENING_TYPES = get_args(ScreeningType)
 
 
 def _next_numero(session: Session) -> str:
@@ -45,7 +50,7 @@ def _to_record(doc: ClinicalDocument) -> ScreeningRecord:
         patient_id=doc.patient_id,
         author_id=doc.author_id,
         co_author_ids=[u.id for u in doc.co_authors],
-        content=json.loads(doc.content),
+        content=decrypt_json(doc.content_enc),
         created_at=doc.created_at,
         updated_at=doc.updated_at,
         signatures=[
@@ -76,7 +81,8 @@ class SqlAlchemyScreeningRepository(ScreeningRepository):
                 type=data.type,
                 patient_id=data.patient_id,
                 author_id=data.author_id,
-                content=json.dumps(data.content),
+                content_enc=encrypt_json(data.content),
+                content_hash=content_digest(data.content),
                 co_authors=list(co_authors),
             )
             session.add(doc)
@@ -114,7 +120,8 @@ class SqlAlchemyScreeningRepository(ScreeningRepository):
                 raise ConflictError(
                     "Rascunho desatualizado ou não editável (verifique versão/status).", {"documentId": id}
                 )
-            doc.content = json.dumps(content)
+            doc.content_enc = encrypt_json(content)
+            doc.content_hash = content_digest(content)
             doc.version += 1
             session.flush()
             session.refresh(doc, attribute_names=["co_authors", "signatures"])

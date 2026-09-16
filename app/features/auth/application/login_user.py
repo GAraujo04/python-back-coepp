@@ -9,10 +9,17 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from ....shared.audit.audit_recorder import AuditEvent, AuditRecorder
-from ....shared.errors.app_error import UnauthorizedError
+from ....shared.errors.app_error import TooManyRequestsError, UnauthorizedError
 from ..domain.user import Email, Role
 from ..domain.user_repository import UserRepository
-from .ports import AccessTokenPayload, AccessTokenSigner, PasswordHasher, RefreshSessionMeta, RefreshTokenStore
+from .ports import (
+    AccessTokenPayload,
+    AccessTokenSigner,
+    LoginAttemptTracker,
+    PasswordHasher,
+    RefreshSessionMeta,
+    RefreshTokenStore,
+)
 
 
 @dataclass
@@ -42,7 +49,13 @@ class LoginOutput:
 class LoginUser:
     """Verifica credenciais, emite access token (JWT curto) e refresh token
     (opaco, rotativo), e registra o evento na trilha de auditoria. Mensagens
-    de erro são genéricas para não permitir enumeração de usuários."""
+    de erro são genéricas para não permitir enumeração de usuários.
+
+    Tentativas falhas bloqueiam a CONTA temporariamente (mesma política do
+    InternLogin). O rate limit por IP do middleware HTTP é a outra metade
+    da defesa e não substitui esta: sozinho, ele cai por terra assim que o
+    atacante distribui as tentativas por vários IPs, que é exatamente o que
+    uma botnet faz de graça."""
 
     def __init__(
         self,
@@ -50,16 +63,22 @@ class LoginUser:
         hasher: PasswordHasher,
         access_tokens: AccessTokenSigner,
         refresh_tokens: RefreshTokenStore,
+        attempts: LoginAttemptTracker,
         audit: AuditRecorder,
     ) -> None:
         self._users = users
         self._hasher = hasher
         self._access_tokens = access_tokens
         self._refresh_tokens = refresh_tokens
+        self._attempts = attempts
         self._audit = audit
 
     def execute(self, input: LoginInput) -> LoginOutput:
         email = Email.create(input.email)
+        attempt_key = f"email:{email.value}"
+        if self._attempts.is_locked(attempt_key):
+            raise TooManyRequestsError("Muitas tentativas. Tente novamente mais tarde.")
+
         user = self._users.find_by_email(email.value)
 
         password_ok = self._hasher.verify(user.password_hash, input.password) if user and user.password_hash else False
@@ -68,6 +87,7 @@ class LoginUser:
         # junto com a senha (não antes) para não vazar, pela resposta, que
         # o e-mail pertence a uma conta INTERN.
         if not user or user.role == "INTERN" or not password_ok or not user.can_authenticate():
+            self._attempts.record_failure(attempt_key)
             self._audit.record(
                 AuditEvent(
                     actor_id=user.id if user else None,
@@ -80,6 +100,7 @@ class LoginUser:
             )
             raise UnauthorizedError("E-mail ou senha inválidos.")
 
+        self._attempts.record_success(attempt_key)
         access_token = self._access_tokens.sign(AccessTokenPayload(sub=user.id, role=user.role, email=email.value))
         refresh = self._refresh_tokens.issue(user.id, input.meta)
 

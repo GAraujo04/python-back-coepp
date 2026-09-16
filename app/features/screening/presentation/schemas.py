@@ -8,12 +8,11 @@ JSON Schema original.
 
 from __future__ import annotations
 
-from typing import Literal
-
 from pydantic import Field
 
 from ....shared.http.camel_model import CamelModel
 from ....shared.http.utc_datetime import UtcDatetime
+from ...screening.domain.screening_content import ScreeningType
 
 
 class SignatureOut(CamelModel):
@@ -27,7 +26,7 @@ class SignatureOut(CamelModel):
 class ScreeningOut(CamelModel):
     id: str
     numero: str | None
-    type: Literal["SCREENING_ADULT", "SCREENING_CHILD"]
+    type: ScreeningType
     status: str
     version: int
     patient_id: str
@@ -40,7 +39,7 @@ class ScreeningOut(CamelModel):
 
 
 class CreateScreeningRequest(CamelModel):
-    type: Literal["SCREENING_ADULT", "SCREENING_CHILD"]
+    type: ScreeningType
     patient_id: str
     co_author_ids: list[str] = Field(default_factory=list)
     content: dict[str, object] = Field(default_factory=dict)

@@ -38,6 +38,11 @@ select = ["E", "F", "I", "UP", "B"]
 # função em argumento default" genérico que a regra existe pra pegar.
 ignore = ["B008"]
 
+[tool.ruff.lint.isort]
+# O diretório alembic/ na raiz faz o isort classificar `from alembic import
+# op` como import local do projeto. É a biblioteca — só coincide o nome.
+known-third-party = ["alembic"]
+
 [tool.mypy]
 python_version = "3.13"
 strict = true

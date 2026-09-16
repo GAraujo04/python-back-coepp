@@ -53,12 +53,20 @@ router = APIRouter(prefix="/api", tags=["auth"])
 
 REFRESH_COOKIE = "pep_refresh"
 
-# Bloqueio de tentativas por usuário RM/IP precisa sobreviver entre
-# requests (é o próprio ponto do rate-limit) — diferente da Session, que é
-# por request. Único estado do módulo que fica fora da função de
-# dependência por request; mesma vida útil de processo que tinha no
-# Fastify (instanciado uma vez em authRoutes()).
+# Bloqueio de tentativas precisa sobreviver entre requests (é o próprio
+# ponto do rate-limit) — diferente da Session, que é por request. Único
+# estado do módulo que fica fora da função de dependência por request;
+# mesma vida útil de processo que tinha no Fastify (instanciado uma vez em
+# authRoutes()).
+#
+# Um tracker POR MECANISMO de login, não um só compartilhado: as chaves já
+# são disjuntas por prefixo ("rm:", "email:", "cpf:"), mas separar deixa
+# explícito que a política de cada um é ajustável de forma independente —
+# o login do paciente, que não tem senha, é o candidato natural a um
+# limite mais estreito que os outros dois.
 _intern_login_attempts = InMemoryLoginAttemptTracker()
+_user_login_attempts = InMemoryLoginAttemptTracker()
+_patient_login_attempts = InMemoryLoginAttemptTracker()
 
 
 def _get_db() -> Iterator[Session]:
@@ -132,7 +140,7 @@ def login(
     refresh_tokens: SqlAlchemyRefreshTokenStore = Depends(_get_refresh_tokens),
     access_tokens: JwtAccessTokenSigner = Depends(_get_access_token_signer),
 ) -> SessionResponse:
-    use_case = LoginUser(users, ArgonPasswordHasher(), access_tokens, refresh_tokens, audit)
+    use_case = LoginUser(users, ArgonPasswordHasher(), access_tokens, refresh_tokens, _user_login_attempts, audit)
     correlation_id = getattr(request.state, "correlation_id", None)
     result = use_case.execute(
         LoginInput(email=body.email, password=body.password, meta=_request_meta(request), correlation_id=correlation_id)
@@ -204,7 +212,9 @@ def patient_login(
     refresh_tokens: SqlAlchemyRefreshTokenStore = Depends(_get_refresh_tokens),
     access_tokens: JwtAccessTokenSigner = Depends(_get_access_token_signer),
 ) -> SessionResponse:
-    use_case = PatientLogin(SqlAlchemyPatientAuthRepository(db), access_tokens, refresh_tokens, audit)
+    use_case = PatientLogin(
+        SqlAlchemyPatientAuthRepository(db), access_tokens, refresh_tokens, _patient_login_attempts, audit
+    )
     correlation_id = getattr(request.state, "correlation_id", None)
     result = use_case.execute(
         PatientLoginInput(

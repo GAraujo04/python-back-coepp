@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ....shared.crypto.blind_index import cpf_blind_index
+from ....shared.crypto.field_encryption import decrypt_field
 from ....shared.db.models import Patient, User
 from ..application.ports import PatientAccount, PatientAuthLookup
 
@@ -29,5 +30,5 @@ class SqlAlchemyPatientAuthRepository(PatientAuthLookup):
             user_id=account.id,
             email=account.email,
             full_name=account.full_name,
-            birth_date=row.birth_date.isoformat() if row.birth_date else None,
+            birth_date=decrypt_field(row.birth_date_enc) if row.birth_date_enc else None,
         )
