@@ -77,6 +77,7 @@ def review_queue(
             status=i.status,
             author_name=i.author_name,
             patient_name=i.patient_name,
+            patient_code=i.patient_code,
             updated_at=i.updated_at,
         )
         for i in items
@@ -103,6 +104,7 @@ def get_review(
         status=doc.status,
         author_name=doc.author_name,
         patient_name=doc.patient_name,
+        patient_code=doc.patient_code,
         updated_at=doc.updated_at,
         content=doc.content,
         comments=[

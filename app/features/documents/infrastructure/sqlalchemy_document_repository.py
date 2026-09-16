@@ -41,6 +41,9 @@ class QueueItem:
     status: str
     author_name: str
     patient_name: str
+    # Código do paciente (Patient.code) — é o "Nº" exibido no documento, o
+    # identificador pelo qual o supervisor sabe de qual paciente se trata.
+    patient_code: str
     updated_at: datetime
 
 
@@ -181,6 +184,7 @@ class SqlAlchemyDocumentRepository:
                     status=r.status,
                     author_name=r.author.full_name,
                     patient_name=decrypt_field(r.patient.full_name_enc),
+                    patient_code=r.patient.code,
                     updated_at=r.updated_at,
                 )
                 for r in rows
@@ -200,6 +204,7 @@ class SqlAlchemyDocumentRepository:
                 status=r.status,
                 author_name=r.author.full_name,
                 patient_name=decrypt_field(r.patient.full_name_enc),
+                patient_code=r.patient.code,
                 updated_at=r.updated_at,
                 content=json.loads(r.content),
                 comments=[

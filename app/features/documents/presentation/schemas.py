@@ -31,6 +31,7 @@ class QueueItemOut(CamelModel):
     status: str
     author_name: str
     patient_name: str
+    patient_code: str
     updated_at: UtcDatetime
 
 
