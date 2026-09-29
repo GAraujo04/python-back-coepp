@@ -8,9 +8,9 @@ schema sozinho.
 
 A partir desta revisão, o Alembic assume. As migrations do Prisma
 permanecem como o histórico de tudo que já foi aplicado (não são
-reescritas nem re-executadas); a primeira revisão daqui parte do banco
-JÁ migrado por elas. Por isso não há uma revisão "initial" que cria as
-tabelas: elas existem.
+reescritas nem re-executadas). A revisão 0000_baseline_prisma_schema
+reproduz o resultado delas (SQL copiado em `alembic/baseline/`) para
+montar um banco do zero; num banco que já veio do Prisma ela não faz nada.
 
 A URL vem do mesmo `load_env()` que a aplicação usa — não de
 `alembic.ini` — pra não haver duas fontes de verdade para a credencial do
