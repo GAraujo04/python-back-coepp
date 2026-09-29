@@ -50,7 +50,7 @@ from alembic import op
 from app.shared.crypto.json_field import canonical_json, content_digest, decrypt_json, encrypt_json
 
 revision = "0001_encrypt_clinical_content"
-down_revision = None
+down_revision = "0000_base_schema"
 branch_labels = None
 depends_on = None
 

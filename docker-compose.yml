@@ -1,0 +1,57 @@
+# Banco de desenvolvimento local. Só o SQL Server — o backend roda fora do
+# container, com `uvicorn --reload`, pra não ter que rebuildar imagem a cada
+# alteração.
+#
+#   docker compose up -d --wait mssql   # sobe o servidor
+#   docker compose up mssql-init        # cria o banco 'pep' (idempotente)
+#   docker compose down -v              # apaga tudo, inclusive os dados
+#
+# Veio do docker-compose.yml do repo `pep` (a versão antiga do projeto), sem
+# os serviços que não usamos mais aqui: Redis, o backend Fastify e o Traefik.
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    # Em Apple Silicon (ARM64) a imagem roda emulada — funciona, mas a
+    # primeira subida demora bem mais que um Postgres.
+    platform: linux/amd64
+    environment:
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Pep_Dev_Password_2026!} # dev-only; em prod, secrets
+      MSSQL_PID: Developer
+    ports:
+      - '1433:1433'
+    volumes:
+      - mssqldata:/var/opt/mssql
+    healthcheck:
+      test: ['CMD-SHELL', '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    networks: [app]
+
+  # O SQL Server não tem equivalente ao POSTGRES_DB (que criava o banco
+  # sozinho), então este serviço cria o banco 'pep' uma vez, de forma
+  # idempotente — sem passo manual depois do `up`.
+  mssql-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    depends_on:
+      mssql:
+        condition: service_healthy
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Pep_Dev_Password_2026!}
+    entrypoint:
+      - /bin/bash
+      - -c
+      - >
+        /opt/mssql-tools18/bin/sqlcmd -S mssql -U sa -P "$$MSSQL_SA_PASSWORD" -C
+        -Q "IF DB_ID('pep') IS NULL CREATE DATABASE pep"
+    networks: [app]
+
+networks:
+  app: {}
+
+volumes:
+  mssqldata: {}

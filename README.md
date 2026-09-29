@@ -12,11 +12,16 @@ Python de verdade, não Fastify/Node. Ver:
 - ADR: [`../pep/docs/adr/0005-backend-python-fastapi-repo-proprio.md`](../pep/docs/adr/0005-backend-python-fastapi-repo-proprio.md)
 - Spec: [`../pep/docs/specs/migracao-backend-python.md`](../pep/docs/specs/migracao-backend-python.md)
 
-**Não define nada sozinho** — o contrato HTTP é o de
-`pep/docs/api/openapi.yaml`, reproduzido aqui, não redesenhado. O banco
-(SQL Server) é o mesmo, com o mesmo schema/RLS/triggers do
-`pep/apps/api/prisma` — esta migração troca só a linguagem/framework da
-camada de aplicação.
+**Não redesenha o contrato** — o HTTP é o de `pep/docs/api/openapi.yaml`,
+reproduzido aqui. O banco (SQL Server) tem o mesmo schema/RLS/triggers que
+o `pep/apps/api/prisma` criava: esta migração trocou só a linguagem e o
+framework da camada de aplicação.
+
+Desde 29/09/2026 o schema **nasce aqui**, no Alembic — a migration
+`0000_base_schema` replica, verbatim, o SQL das 8 migrations do Prisma, e o
+`docker-compose.yml` e o seed também passaram para este repo. O `pep` deixou
+de ser necessário para desenvolver; continua sendo o histórico do projeto e
+a casa dos ADRs/specs.
 
 ## Stack
 
@@ -32,18 +37,28 @@ Pré-requisitos: Python 3.13+, SQL Server local rodando (`docker compose up mssq
 
 ### Do zero, numa máquina nova
 
-Este backend não sobe sozinho: depende do banco (repo `pep`, que também define
-o schema, via Prisma) e compartilha segredos com ele. Há um script que monta o
-ambiente inteiro — banco, migrations, seed, venv e os dois `.env` em sincronia
-— e ele vive no repo do frontend:
-
 ```bash
-git clone https://github.com/GAraujo04/nuxt-front-coepp.git ../nuxt-front-coepp
-bash ../nuxt-front-coepp/scripts/setup.sh
+docker compose up -d --wait mssql   # SQL Server
+docker compose up mssql-init        # cria o banco 'pep'
+
+python3.13 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+cp .env.example .env                # gere JWT_SECRET e ENCRYPTION_KEY (ver abaixo)
+
+.venv/bin/alembic upgrade head      # cria tabelas, RLS e triggers
+.venv/bin/python -m scripts.seed    # usuários e paciente de exemplo (idempotente)
+.venv/bin/uvicorn app.main:app --reload --port 8001
 ```
 
-Pode rodar de dentro desta pasta: o script se localiza sozinho e clona o que
-faltar. Passo a passo detalhado e solução de problemas em
+Os segredos do `.env`:
+
+```bash
+openssl rand -base64 48   # JWT_SECRET
+openssl rand -base64 32   # ENCRYPTION_KEY
+```
+
+Se você também vai mexer no frontend, o repo dele tem um `npm run setup` que
+faz tudo isso de uma vez, dos dois lados — ver
 [`../nuxt-front-coepp/SETUP.md`](../nuxt-front-coepp/SETUP.md).
 
 ### No dia a dia
@@ -56,19 +71,10 @@ Sobe só o backend. Para backend + frontend juntos, é `npm run dev` no repo do
 front — que chama este mesmo uvicorn por caminho relativo, e é por isso que os
 repositórios precisam ser pastas irmãs com estes nomes.
 
-### Na mão, se preferir
-
-```bash
-python3.13 -m venv .venv
-.venv/bin/pip install -e ".[dev]"
-cp .env.example .env  # ajuste DATABASE_URL/segredos
-.venv/bin/alembic upgrade head  # depois do `prisma migrate deploy` no repo pep
-.venv/bin/uvicorn app.main:app --reload --port 8001
-```
-
-⚠️ A `ENCRYPTION_KEY` deste `.env` tem que ser **idêntica** à do
-`pep/apps/api/.env`: é ela que cifra o PII em repouso, e uma chave diferente
-não dá erro de credencial — deixa ilegível tudo que já está gravado.
+⚠️ Depois que houver dado no banco, **não troque a `ENCRYPTION_KEY`**: é ela
+que cifra o PII em repouso, e uma chave diferente não dá erro de credencial —
+deixa ilegível tudo que já está gravado. Para recomeçar limpo,
+`docker compose down -v` e repita o roteiro.
 
 Roda na porta **8001** por padrão (o Fastify original continua na 8000) —
 de propósito, pra permitir rodar os dois lado a lado durante a migração e
