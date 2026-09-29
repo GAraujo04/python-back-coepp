@@ -30,12 +30,45 @@ camada de aplicação.
 
 Pré-requisitos: Python 3.13+, SQL Server local rodando (`docker compose up mssql` no repo `pep`), driver ODBC 18 instalado (`brew install msodbcsql18` via o tap `microsoft/mssql-release`).
 
+### Do zero, numa máquina nova
+
+Este backend não sobe sozinho: depende do banco (repo `pep`, que também define
+o schema, via Prisma) e compartilha segredos com ele. Há um script que monta o
+ambiente inteiro — banco, migrations, seed, venv e os dois `.env` em sincronia
+— e ele vive no repo do frontend:
+
+```bash
+git clone https://github.com/GAraujo04/nuxt-front-coepp.git ../nuxt-front-coepp
+bash ../nuxt-front-coepp/scripts/setup.sh
+```
+
+Pode rodar de dentro desta pasta: o script se localiza sozinho e clona o que
+faltar. Passo a passo detalhado e solução de problemas em
+[`../nuxt-front-coepp/SETUP.md`](../nuxt-front-coepp/SETUP.md).
+
+### No dia a dia
+
+```bash
+.venv/bin/uvicorn app.main:app --reload --port 8001
+```
+
+Sobe só o backend. Para backend + frontend juntos, é `npm run dev` no repo do
+front — que chama este mesmo uvicorn por caminho relativo, e é por isso que os
+repositórios precisam ser pastas irmãs com estes nomes.
+
+### Na mão, se preferir
+
 ```bash
 python3.13 -m venv .venv
 .venv/bin/pip install -e ".[dev]"
 cp .env.example .env  # ajuste DATABASE_URL/segredos
+.venv/bin/alembic upgrade head  # depois do `prisma migrate deploy` no repo pep
 .venv/bin/uvicorn app.main:app --reload --port 8001
 ```
+
+⚠️ A `ENCRYPTION_KEY` deste `.env` tem que ser **idêntica** à do
+`pep/apps/api/.env`: é ela que cifra o PII em repouso, e uma chave diferente
+não dá erro de credencial — deixa ilegível tudo que já está gravado.
 
 Roda na porta **8001** por padrão (o Fastify original continua na 8000) —
 de propósito, pra permitir rodar os dois lado a lado durante a migração e
