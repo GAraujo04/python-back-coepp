@@ -67,6 +67,10 @@ class User(Base):
     )
     periodo: Mapped[str | None] = mapped_column(String, default=None)
     turma: Mapped[str | None] = mapped_column(String, default=None)
+    # Trava da disponibilidade (migration 0005): NULL = travada.
+    availability_unlocked_until: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    availability_change_requested_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
+    availability_change_reason: Mapped[str | None] = mapped_column(String, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
 

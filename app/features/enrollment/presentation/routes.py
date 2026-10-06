@@ -21,13 +21,17 @@ from ....shared.audit.sql_audit_recorder import SqlAuditRecorder
 from ....shared.auth.jwt_auth import CurrentUser, require_role
 from ....shared.db.session import get_session
 from ....shared.scheduling.availability_window import AvailabilityWindowInput
+from ..application.availability_lock import RequestAvailabilityChange, utcnow
 from ..application.complete_intern_profile import CompleteInternProfile, CompleteInternProfileInput
 from ..application.register_patient_public import RegisterPatientPublic, RegisterPatientPublicInput
 from ..application.register_student_public import RegisterStudentPublic, RegisterStudentPublicInput
 from ..application.update_availability_windows import UpdateAvailabilityWindows, UpdateAvailabilityWindowsInput
 from ..infrastructure.responsibility_term import read_responsibility_term
+from ..infrastructure.sqlalchemy_availability_lock_repository import SqlAlchemyAvailabilityLockRepository
 from ..infrastructure.sqlalchemy_enrollment_repository import GuardianInput, SqlAlchemyEnrollmentRepository
 from .schemas import (
+    AvailabilityChangeRequestIn,
+    AvailabilityLockOut,
     AvailabilityWindowIn,
     AvailabilityWindowOut,
     CompleteInternProfileRequest,
@@ -56,6 +60,10 @@ def _get_repo(db: Session = Depends(_get_db)) -> SqlAlchemyEnrollmentRepository:
 
 def _get_audit(db: Session = Depends(_get_db)) -> AuditRecorder:
     return SqlAuditRecorder(db)
+
+
+def _get_lock_repo(db: Session = Depends(_get_db)) -> SqlAlchemyAvailabilityLockRepository:
+    return SqlAlchemyAvailabilityLockRepository(db)
 
 
 def _to_domain_windows(windows: list[AvailabilityWindowIn]) -> list[AvailabilityWindowInput]:
@@ -203,20 +211,59 @@ def get_availability_windows(
 @router.put(
     "/enrollment/availability-windows",
     status_code=204,
-    summary="Substitui a disponibilidade recorrente do estagiário logado — editável a qualquer momento do semestre",
+    summary="Substitui a disponibilidade do estagiário logado — só com liberação do supervisor (403 se travada)",
 )
 def put_availability_windows(
     body: UpdateAvailabilityWindowsRequest,
     request: Request,
     current: CurrentUser = Depends(require_role(["INTERN"])),
     repo: SqlAlchemyEnrollmentRepository = Depends(_get_repo),
+    lock: SqlAlchemyAvailabilityLockRepository = Depends(_get_lock_repo),
     audit: AuditRecorder = Depends(_get_audit),
 ) -> None:
-    use_case = UpdateAvailabilityWindows(repo, audit)
+    use_case = UpdateAvailabilityWindows(repo, lock, audit)
     use_case.execute(
         UpdateAvailabilityWindowsInput(
             user_id=current.sub,
             windows=_to_domain_windows(body.windows),
             correlation_id=getattr(request.state, "correlation_id", None),
         )
+    )
+
+
+@router.get(
+    "/enrollment/availability-lock",
+    response_model=AvailabilityLockOut,
+    summary="Situação da trava de disponibilidade do estagiário logado (editável? pedido pendente?)",
+)
+def get_availability_lock(
+    current: CurrentUser = Depends(require_role(["INTERN"])),
+    lock: SqlAlchemyAvailabilityLockRepository = Depends(_get_lock_repo),
+) -> AvailabilityLockOut:
+    state = lock.get_state(current.sub)
+    now = utcnow()
+    if state is None:  # token de INTERN sem linha INTERN: trata como travado, sem pedido
+        return AvailabilityLockOut(editable=False, unlocked_until=None, requested_at=None, request_reason=None)
+    return AvailabilityLockOut(
+        editable=state.editable(now),
+        unlocked_until=state.unlocked_until if state.editable(now) else None,
+        requested_at=state.requested_at,
+        request_reason=state.request_reason,
+    )
+
+
+@router.post(
+    "/enrollment/availability-change-request",
+    status_code=204,
+    summary="Estagiário pede ao supervisor a liberação para alterar a disponibilidade",
+)
+def request_availability_change(
+    body: AvailabilityChangeRequestIn,
+    request: Request,
+    current: CurrentUser = Depends(require_role(["INTERN"])),
+    lock: SqlAlchemyAvailabilityLockRepository = Depends(_get_lock_repo),
+    audit: AuditRecorder = Depends(_get_audit),
+) -> None:
+    RequestAvailabilityChange(lock, audit).execute(
+        current.sub, body.reason, getattr(request.state, "correlation_id", None)
     )
