@@ -15,6 +15,7 @@ from ....shared.audit.sql_audit_recorder import SqlAuditRecorder
 from ....shared.auth.jwt_auth import CurrentUser, get_current_user, require_role
 from ....shared.db.session import get_session
 from ....shared.errors.app_error import NotFoundError
+from ....shared.privacy.patient_name import patient_name_for
 from ..application.transition_document import TransitionDocument, TransitionInput
 from ..infrastructure.internal_signature_provider import InternalSignatureProvider
 from ..infrastructure.sqlalchemy_document_repository import SqlAlchemyDocumentRepository
@@ -84,7 +85,7 @@ def review_queue(
             type=i.type,
             status=i.status,
             author_name=i.author_name,
-            patient_name=i.patient_name,
+            patient_name=patient_name_for(current.role, i.patient_name),
             patient_code=i.patient_code,
             updated_at=i.updated_at,
         )
@@ -111,7 +112,7 @@ def reports(
             type=i.type,
             status=i.status,
             author_name=i.author_name,
-            patient_name=i.patient_name,
+            patient_name=patient_name_for(current.role, i.patient_name),
             patient_code=i.patient_code,
             updated_at=i.updated_at,
             author_id=i.author_id,
@@ -140,7 +141,7 @@ def get_review(
         type=doc.type,
         status=doc.status,
         author_name=doc.author_name,
-        patient_name=doc.patient_name,
+        patient_name=patient_name_for(current.role, doc.patient_name),
         patient_code=doc.patient_code,
         updated_at=doc.updated_at,
         content=doc.content,

@@ -40,7 +40,8 @@ class MatchViewOut(CamelModel):
     scheduled_at: str
     status: str
     intern_name: str
-    patient_name: str
+    patient_name: str | None  # None para o supervisor
+    patient_code: str
     room_name: str | None
 
 

@@ -39,6 +39,7 @@ class MatchView:
     status: str
     intern_name: str
     patient_name: str
+    patient_code: str
     room_name: str | None
 
 
@@ -251,6 +252,7 @@ class SqlAlchemyMatchingRepository:
                     status=r.status,
                     intern_name=r.intern.full_name,
                     patient_name=decrypt_field(r.patient.full_name_enc),
+                    patient_code=r.patient.code,
                     room_name=r.room.name if r.room else None,
                 )
                 for r in rows
