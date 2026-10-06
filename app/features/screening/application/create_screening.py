@@ -10,8 +10,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from ....shared.audit.audit_recorder import AuditEvent, AuditRecorder
+from ....shared.errors.app_error import ConflictError
 from ..domain.screening_content import ScreeningType, validate_screening_content
-from ..domain.screening_repository import AccessContext, NewScreening, ScreeningRecord, ScreeningRepository
+from ..domain.screening_repository import (
+    SCREENING_ONCE_TYPES,
+    AccessContext,
+    NewScreening,
+    ScreeningRecord,
+    ScreeningRepository,
+)
 
 
 @dataclass
@@ -31,6 +38,14 @@ class CreateScreening:
 
     def execute(self, input: CreateScreeningInput) -> ScreeningRecord:
         content = validate_screening_content(input.type, input.content)
+        # Checado aqui, e não só na tela: a RLS esconde do estagiário a
+        # triagem feita por OUTRO estagiário, então o front não tem como
+        # saber que ela existe.
+        if input.type in SCREENING_ONCE_TYPES and self._repo.patient_has_screening(input.actor, input.patient_id):
+            raise ConflictError(
+                "Este paciente já possui uma triagem. A triagem é preenchida uma única vez por paciente.",
+                {"patientId": input.patient_id, "reason": "screening_already_exists"},
+            )
         # Coautores sem duplicar o próprio autor.
         co_author_ids = [i for i in dict.fromkeys(input.co_author_ids) if i != input.actor.user_id]
 

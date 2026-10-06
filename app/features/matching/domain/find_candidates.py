@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from ....shared.scheduling.next_occurrence import next_occurrence
+from ....shared.scheduling.room_category import DEFAULT_ROOM_CATEGORY, RoomCategory, rank_rooms_for
 from .overlap import has_minimum_overlap, later_start
 
 
@@ -21,12 +22,15 @@ class PersonWithWindows:
     id: str
     name: str
     windows: list[WindowSlot] = field(default_factory=list)
+    # Só faz sentido para paciente (ver room_category.preferred_room_category).
+    preferred_room_category: RoomCategory | None = None
 
 
 @dataclass
 class RoomOption:
     id: str
     name: str
+    category: str = DEFAULT_ROOM_CATEGORY
 
 
 @dataclass
@@ -78,6 +82,7 @@ def _find_candidate(
     room_busy: set[str],
     now: datetime,
 ) -> Candidate | None:
+    rooms = rank_rooms_for(rooms, patient.preferred_room_category)
     for intern in interns:
         for patient_window in patient.windows:
             for intern_window in intern.windows:

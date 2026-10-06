@@ -18,10 +18,12 @@ from starlette.middleware.cors import CORSMiddleware
 
 from .features.appointments.presentation.routes import router as appointments_router
 from .features.assignments.presentation.routes import router as assignments_router
+from .features.attendance_period.presentation.routes import router as attendance_period_router
 from .features.auth.presentation.routes import router as auth_router
 from .features.auth.presentation.user_routes import router as user_router
 from .features.disciplinas.presentation.routes import router as disciplinas_router
 from .features.documents.presentation.routes import router as documents_router
+from .features.enrollment.presentation.availability_lock_routes import router as availability_lock_router
 from .features.enrollment.presentation.routes import router as enrollment_router
 from .features.health.presentation.routes import router as health_router
 from .features.matching.presentation.routes import router as matching_router
@@ -89,11 +91,13 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(user_router)
     app.include_router(appointments_router)
+    app.include_router(attendance_period_router)
     app.include_router(disciplinas_router)
     app.include_router(rooms_router)
     app.include_router(patients_router)
     app.include_router(screening_router)
     app.include_router(enrollment_router)
+    app.include_router(availability_lock_router)
     app.include_router(matching_router)
     app.include_router(documents_router)
     app.include_router(assignments_router)

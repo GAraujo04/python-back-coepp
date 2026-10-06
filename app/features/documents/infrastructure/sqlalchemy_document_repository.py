@@ -48,6 +48,16 @@ class QueueItem:
 
 
 @dataclass
+class ReportItem(QueueItem):
+    author_id: str = ""
+    # "Chegada" ao supervisor: a última assinatura do estagiário, que é
+    # gravada a cada envio (SUBMIT) — um reenvio após ajustes conta como
+    # nova chegada. Documento sem assinatura de estagiário (legado) usa
+    # updated_at.
+    submitted_at: datetime | None = None
+
+
+@dataclass
 class SignatureView:
     signer_name: str
     signer_role: str
@@ -191,6 +201,36 @@ class SqlAlchemyDocumentRepository:
             ]
 
         return with_rls_context(self._session, actor_id, "ADMIN", _do)
+
+    def list_reports(self, actor_id: str, role: str) -> list[ReportItem]:
+        """Documentos já enviados (tudo menos RASCUNHO), em ordem de
+        chegada. Diferente da fila de revisão, roda sob o papel REAL do
+        ator: a RLS restringe o supervisor aos pacientes dos quais ele é
+        supervisor num vínculo ativo, e o admin vê todos."""
+
+        def _do(session: Session) -> list[ReportItem]:
+            rows = session.scalars(select(ClinicalDocument).where(ClinicalDocument.status != "RASCUNHO")).all()
+            items = []
+            for r in rows:
+                intern_signatures = [s.signed_at for s in r.signatures if s.signer_role == "INTERN"]
+                items.append(
+                    ReportItem(
+                        id=r.id,
+                        numero=r.numero,
+                        type=r.type,
+                        status=r.status,
+                        author_name=r.author.full_name,
+                        patient_name=decrypt_field(r.patient.full_name_enc),
+                        patient_code=r.patient.code,
+                        updated_at=r.updated_at,
+                        author_id=r.author_id,
+                        submitted_at=max(intern_signatures) if intern_signatures else r.updated_at,
+                    )
+                )
+            items.sort(key=lambda i: (i.submitted_at or i.updated_at, i.id))
+            return items
+
+        return with_rls_context(self._session, actor_id, role, _do)
 
     def get_for_review(self, actor_id: str, document_id: str) -> DocForReview | None:
         def _do(session: Session) -> DocForReview | None:

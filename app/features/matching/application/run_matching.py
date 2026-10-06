@@ -22,6 +22,7 @@ from datetime import UTC, datetime
 
 from ....shared.audit.audit_recorder import AuditEvent, AuditRecorder
 from ....shared.http.utc_datetime import to_iso_utc
+from ....shared.scheduling.weekly_series import period_start_utc
 from ..domain.find_candidates import find_all_candidates
 from ..domain.find_nearest_fallback import find_nearest_fallback
 from ..infrastructure.sqlalchemy_matching_repository import (
@@ -49,6 +50,11 @@ class RunMatching:
         self, actor_id: str, correlation_id: str | None = None, now: datetime | None = None
     ) -> list[MatchResult]:
         now = now if now is not None else datetime.now(UTC).replace(tzinfo=None)
+        # Período de atendimentos ainda por começar: a primeira consulta é
+        # calculada a partir do início dele, não de hoje.
+        period = self._repo.attendance_period()
+        if period:
+            now = max(now, period_start_utc(period.start))
         patients = self._repo.candidate_patients()
         interns = self._repo.interns_with_windows()
         rooms = self._repo.active_rooms()

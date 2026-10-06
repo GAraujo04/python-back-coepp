@@ -13,11 +13,13 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ....shared.crypto.json_field import content_digest, decrypt_json, encrypt_json
+from ....shared.db.applock import with_app_lock
 from ....shared.db.models import ClinicalDocument, User
 from ....shared.db.session import with_rls_context
 from ....shared.errors.app_error import ConflictError, NotFoundError
 from ..domain.screening_content import ScreeningType
 from ..domain.screening_repository import (
+    SCREENING_ONCE_TYPES,
     AccessContext,
     NewScreening,
     ScreeningRecord,
@@ -91,6 +93,27 @@ class SqlAlchemyScreeningRepository(ScreeningRepository):
             return _to_record(doc)
 
         return with_rls_context(self._session, ctx.user_id, ctx.role, _do)
+
+    def patient_has_screening(self, ctx: AccessContext, patient_id: str) -> bool:
+        def _do(session: Session) -> bool:
+            # Lock por paciente, dono = transação: segura até o commit do
+            # request, cobrindo também o INSERT que vem logo depois. Sem
+            # ele, dois cliques simultâneos passariam os dois pela checagem.
+            def _exists() -> bool:
+                found = session.scalar(
+                    select(ClinicalDocument.id).where(
+                        ClinicalDocument.patient_id == patient_id,
+                        ClinicalDocument.type.in_(SCREENING_ONCE_TYPES),
+                    )
+                )
+                return found is not None
+
+            return with_app_lock(session, f"screening-once:{patient_id}", _exists)
+
+        # Contexto ADMIN só para esta leitura de existência (devolve um
+        # booleano, nada do documento): sob o contexto do estagiário a RLS
+        # filtraria a triagem de outro autor e a checagem passaria em falso.
+        return with_rls_context(self._session, ctx.user_id, "ADMIN", _do)
 
     def list_for_actor(self, ctx: AccessContext) -> list[ScreeningRecord]:
         def _do(session: Session) -> list[ScreeningRecord]:

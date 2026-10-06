@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import EmailStr, Field
 
 from ....shared.http.camel_model import CamelModel
+from ....shared.http.utc_datetime import UtcDatetime
 
 # Padrões de formato (validados também no front por máscara) — mesmos
 # regex do original.
@@ -120,3 +121,31 @@ class RegistrationOptionsOut(CamelModel):
 class ResponsibilityTermOut(CamelModel):
     version: str
     content: str
+
+
+class AvailabilityLockOut(CamelModel):
+    editable: bool
+    unlocked_until: UtcDatetime | None
+    requested_at: UtcDatetime | None
+    request_reason: str | None
+
+
+class AvailabilityChangeRequestIn(CamelModel):
+    reason: str = Field(min_length=1, max_length=500)
+
+
+class AvailabilityUnlockIn(CamelModel):
+    hours: int = Field(default=48, ge=1, le=168)
+
+
+class AvailabilityUnlockOut(CamelModel):
+    unlocked_until: UtcDatetime
+
+
+class PendingAvailabilityRequestOut(CamelModel):
+    intern_id: str
+    intern_name: str
+    ra: str | None
+    requested_at: UtcDatetime | None
+    reason: str | None
+    unlocked_until: UtcDatetime | None
