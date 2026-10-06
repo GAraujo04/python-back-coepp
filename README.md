@@ -33,7 +33,7 @@ a casa dos ADRs/specs.
 
 ## Rodando local
 
-Pré-requisitos: Python 3.13+, SQL Server local rodando (`docker compose up mssql` no repo `pep`), driver ODBC 18 instalado (`brew install msodbcsql18` via o tap `microsoft/mssql-release`).
+Pré-requisitos: Python 3.13+, SQL Server local rodando com um banco `pep` (vazio serve), driver ODBC 18 instalado (`brew install msodbcsql18` via o tap `microsoft/mssql-release`).
 
 ### Do zero, numa máquina nova
 
@@ -43,10 +43,15 @@ docker compose up mssql-init        # cria o banco 'pep'
 
 python3.13 -m venv .venv
 .venv/bin/pip install -e ".[dev]"
+<<<<<<< HEAD
 cp .env.example .env                # gere JWT_SECRET e ENCRYPTION_KEY (ver abaixo)
 
 .venv/bin/alembic upgrade head      # cria tabelas, RLS e triggers
 .venv/bin/python -m scripts.seed    # usuários e paciente de exemplo (idempotente)
+=======
+cp .env.example .env  # ajuste DATABASE_URL/segredos
+.venv/bin/alembic upgrade head  # num banco vazio, cria o schema do zero (revisão 0000)
+>>>>>>> cf2d4738beb14c79a998e658f98575d84c1e19d0
 .venv/bin/uvicorn app.main:app --reload --port 8001
 ```
 

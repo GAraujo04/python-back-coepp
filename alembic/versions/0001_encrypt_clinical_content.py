@@ -1,7 +1,7 @@
 """Cifra clinical_documents.content em repouso.
 
 Revision ID: 0001_encrypt_clinical_content
-Revises:
+Revises: 0000_baseline_prisma_schema
 Create Date: 2026-09-10
 
 `content` guardava o relato clínico (triagem, evolução, laudo) em
@@ -50,7 +50,11 @@ from alembic import op
 from app.shared.crypto.json_field import canonical_json, content_digest, decrypt_json, encrypt_json
 
 revision = "0001_encrypt_clinical_content"
+<<<<<<< HEAD
 down_revision = "0000_base_schema"
+=======
+down_revision = "0000_baseline_prisma_schema"
+>>>>>>> cf2d4738beb14c79a998e658f98575d84c1e19d0
 branch_labels = None
 depends_on = None
 
