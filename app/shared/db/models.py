@@ -16,9 +16,9 @@ tabela para fazer SELECT nela.
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, LargeBinary, String, Table, Text, func
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, LargeBinary, String, Table, Text, func
 from sqlalchemy.dialects.mssql import UNIQUEIDENTIFIER
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -367,3 +367,20 @@ class DocumentSignature(Base):
     signature_hash: Mapped[str] = mapped_column(String, name="signature_hash")
     provider: Mapped[str] = mapped_column(String, default="internal")
     signed_at: Mapped[datetime] = mapped_column(DateTime, name="signed_at", server_default=func.now())
+
+
+class AttendancePeriod(Base):
+    """Período de atendimentos do ciclo (migration 0006). Vigente = o mais
+    recente por created_at."""
+
+    __tablename__ = "attendance_periods"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    start_date: Mapped[date] = mapped_column(Date, name="start_date")
+    end_date: Mapped[date] = mapped_column(Date, name="end_date")
+    created_by: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="created_by", default=None
+    )
+    # Explícito (e não só o DEFAULT do banco): dois saves no mesmo
+    # instante precisam de ordem estável para "o mais recente".
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", default=_now)

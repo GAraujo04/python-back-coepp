@@ -20,6 +20,7 @@ from ....shared.db.session import with_rls_context
 from ....shared.errors.app_error import ConflictError
 from ....shared.scheduling.room_category import preferred_room_category
 from ....shared.scheduling.room_conflict import find_room_conflict
+from ....shared.scheduling.series_writer import PeriodRange, current_period, schedule_weekly_series
 from ...patients.infrastructure.sqlalchemy_patient_repository import age_in_years
 from ..domain.find_candidates import PersonWithWindows, RoomOption, WindowSlot
 
@@ -129,6 +130,10 @@ class SqlAlchemyMatchingRepository:
         avisos."""
         return find_room_conflict(self._session, room_id, scheduled_at) is not None
 
+    def attendance_period(self) -> PeriodRange | None:
+        """Período de atendimentos vigente, se o administrativo configurou."""
+        return current_period(self._session)
+
     def create_match(self, actor_id: str, m: NewMatch) -> str:
         """Cria o vínculo (se necessário) + a consulta na sala calculada.
         Reconfirma o conflito de sala dentro da transação (defesa em
@@ -168,6 +173,20 @@ class SqlAlchemyMatchingRepository:
             )
             session.add(appt)
             session.flush()
+            # Com período configurado, o par já sai com a agenda do ciclo:
+            # toda semana, mesmo dia e horário, até o fim do período. Sem
+            # período, só a primeira consulta — o comportamento de antes.
+            period = current_period(session)
+            if period:
+                schedule_weekly_series(
+                    session,
+                    patient_id=m.patient_id,
+                    intern_id=m.intern_id,
+                    room_id=m.room_id,
+                    anchor=m.scheduled_at,
+                    period=period,
+                    not_before=m.scheduled_at,
+                )
             return appt.id
 
         return with_rls_context(self._session, actor_id, "ADMIN", _do)

@@ -18,6 +18,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from .features.appointments.presentation.routes import router as appointments_router
 from .features.assignments.presentation.routes import router as assignments_router
+from .features.attendance_period.presentation.routes import router as attendance_period_router
 from .features.auth.presentation.routes import router as auth_router
 from .features.auth.presentation.user_routes import router as user_router
 from .features.disciplinas.presentation.routes import router as disciplinas_router
@@ -90,6 +91,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(user_router)
     app.include_router(appointments_router)
+    app.include_router(attendance_period_router)
     app.include_router(disciplinas_router)
     app.include_router(rooms_router)
     app.include_router(patients_router)
