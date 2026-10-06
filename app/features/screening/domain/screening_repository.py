@@ -16,6 +16,10 @@ ScreeningStatus = Literal[
     "RASCUNHO", "ENVIADO_PARA_SUPERVISAO", "EM_REVISAO", "REVISAO_SOLICITADA", "REJEITADO", "APROVADO_LOCKED"
 ]
 
+# A triagem é preenchida UMA vez por paciente: Adulto e Criança são
+# variantes excludentes do mesmo documento, então uma bloqueia a outra.
+SCREENING_ONCE_TYPES: tuple[ScreeningType, ...] = ("SCREENING_ADULT", "SCREENING_CHILD")
+
 
 @dataclass
 class AccessContext:
@@ -60,6 +64,13 @@ class ScreeningRecord:
 class ScreeningRepository(ABC):
     @abstractmethod
     def create(self, ctx: AccessContext, data: NewScreening) -> ScreeningRecord: ...
+
+    @abstractmethod
+    def patient_has_screening(self, ctx: AccessContext, patient_id: str) -> bool:
+        """Já existe triagem (Adulto ou Criança, qualquer status, qualquer
+        autor) para o paciente? Enxerga além da RLS do ator e serializa
+        criações concorrentes do mesmo paciente até o fim da transação."""
+        ...
 
     @abstractmethod
     def list_for_actor(self, ctx: AccessContext) -> list[ScreeningRecord]: ...
