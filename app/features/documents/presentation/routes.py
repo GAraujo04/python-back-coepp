@@ -18,7 +18,15 @@ from ....shared.errors.app_error import NotFoundError
 from ..application.transition_document import TransitionDocument, TransitionInput
 from ..infrastructure.internal_signature_provider import InternalSignatureProvider
 from ..infrastructure.sqlalchemy_document_repository import SqlAlchemyDocumentRepository
-from .schemas import CommentOut, DocForReviewOut, QueueItemOut, SignatureOut, TransitionRequest, TransitionResponse
+from .schemas import (
+    CommentOut,
+    DocForReviewOut,
+    QueueItemOut,
+    ReportItemOut,
+    SignatureOut,
+    TransitionRequest,
+    TransitionResponse,
+)
 
 router = APIRouter(prefix="/api", tags=["documents"])
 
@@ -81,6 +89,35 @@ def review_queue(
             updated_at=i.updated_at,
         )
         for i in items
+    ]
+
+
+@router.get(
+    "/documents/reports",
+    response_model=list[ReportItemOut],
+    summary="Documentos enviados (não rascunho), em ordem de chegada — Supervisor (seus pacientes) / Admin",
+)
+def reports(
+    current: CurrentUser = Depends(require_role(["SUPERVISOR", "ADMIN"])),
+    repo: SqlAlchemyDocumentRepository = Depends(_get_repo),
+) -> list[ReportItemOut]:
+    # Os filtros (aluno, período, tipo, status) ficam no cliente: o volume
+    # de uma clínica-escola por semestre cabe numa resposta, e a lista de
+    # alunos do filtro sai do próprio resultado.
+    return [
+        ReportItemOut(
+            id=i.id,
+            numero=i.numero,
+            type=i.type,
+            status=i.status,
+            author_name=i.author_name,
+            patient_name=i.patient_name,
+            patient_code=i.patient_code,
+            updated_at=i.updated_at,
+            author_id=i.author_id,
+            submitted_at=i.submitted_at or i.updated_at,
+        )
+        for i in repo.list_reports(current.sub, current.role)
     ]
 
 

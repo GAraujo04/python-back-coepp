@@ -35,6 +35,11 @@ class QueueItemOut(CamelModel):
     updated_at: UtcDatetime
 
 
+class ReportItemOut(QueueItemOut):
+    author_id: str
+    submitted_at: UtcDatetime
+
+
 class SignatureOut(CamelModel):
     signer_name: str
     signer_role: str
