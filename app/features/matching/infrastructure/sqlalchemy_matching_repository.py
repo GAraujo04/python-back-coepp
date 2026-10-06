@@ -18,7 +18,9 @@ from ....shared.db.models import AvailabilityWindow as AvailabilityWindowRow
 from ....shared.db.models import Patient as PatientRow
 from ....shared.db.session import with_rls_context
 from ....shared.errors.app_error import ConflictError
+from ....shared.scheduling.room_category import preferred_room_category
 from ....shared.scheduling.room_conflict import find_room_conflict
+from ...patients.infrastructure.sqlalchemy_patient_repository import age_in_years
 from ..domain.find_candidates import PersonWithWindows, RoomOption, WindowSlot
 
 
@@ -67,6 +69,10 @@ def _windows_of(rows: list[AvailabilityWindowRow]) -> list[WindowSlot]:
     return [WindowSlot(weekday=w.weekday, start_time=w.start_time, end_time=w.end_time) for w in rows]
 
 
+def _is_minor(p: PatientRow) -> bool:
+    return age_in_years(decrypt_field(p.birth_date_enc)) < 18 if p.birth_date_enc else False
+
+
 class SqlAlchemyMatchingRepository:
     def __init__(self, session: Session) -> None:
         self._session = session
@@ -76,7 +82,12 @@ class SqlAlchemyMatchingRepository:
         active_patient_ids = select(Assignment.patient_id).where(Assignment.active)
         rows = self._session.scalars(select(PatientRow).where(PatientRow.id.not_in(active_patient_ids))).all()
         return [
-            PersonWithWindows(id=p.id, name=decrypt_field(p.full_name_enc), windows=_windows_of(p.availability_windows))
+            PersonWithWindows(
+                id=p.id,
+                name=decrypt_field(p.full_name_enc),
+                windows=_windows_of(p.availability_windows),
+                preferred_room_category=preferred_room_category(p.has_disability, _is_minor(p)),
+            )
             for p in rows
         ]
 
@@ -88,7 +99,7 @@ class SqlAlchemyMatchingRepository:
     def active_rooms(self) -> list[RoomOption]:
         """Salas ativas, ordenadas por nome (ordem estável de busca da primeira livre)."""
         rows = self._session.scalars(select(Room).where(Room.active).order_by(Room.name.asc())).all()
-        return [RoomOption(id=r.id, name=r.name) for r in rows]
+        return [RoomOption(id=r.id, name=r.name, category=r.category) for r in rows]
 
     def find_patient_candidate(self, patient_id: str) -> PatientCandidate | None:
         """Paciente específico (para o match manual), com disponibilidade e vínculo ativo atual, se houver."""

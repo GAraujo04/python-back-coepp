@@ -138,6 +138,8 @@ class Room(Base):
 
     id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
     name: Mapped[str] = mapped_column(String, unique=True)
+    # PADRAO | ACESSIVEL | INFANTIL | GRUPO (CHECK no banco, migration 0004).
+    category: Mapped[str] = mapped_column(String, default="PADRAO")
     active: Mapped[bool] = mapped_column(default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
 
