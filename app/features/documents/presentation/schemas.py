@@ -30,7 +30,8 @@ class QueueItemOut(CamelModel):
     type: str
     status: str
     author_name: str
-    patient_name: str
+    # None para o supervisor (ver shared/privacy/patient_name.py).
+    patient_name: str | None
     patient_code: str
     updated_at: UtcDatetime
 
