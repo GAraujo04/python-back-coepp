@@ -71,6 +71,8 @@ class User(Base):
     availability_unlocked_until: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     availability_change_requested_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     availability_change_reason: Mapped[str | None] = mapped_column(String, default=None)
+    # Avisos internos (migration 0007): informativos depois disto já foram vistos.
+    notifications_seen_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, name="updated_at", default=_now, onupdate=_now)
 

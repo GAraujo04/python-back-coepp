@@ -1248,6 +1248,125 @@
         "title": "MatchViewOut",
         "type": "object"
       },
+      "NotificationOut": {
+        "properties": {
+          "actionable": {
+            "title": "Actionable",
+            "type": "boolean"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "docType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doctype"
+          },
+          "documentId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Documentid"
+          },
+          "kind": {
+            "enum": [
+              "REVIEW_QUEUE",
+              "AVAILABILITY_REQUESTS",
+              "PENDING_MATCHES",
+              "ASSIGNMENTS_WITHOUT_SUPERVISOR",
+              "CHANGES_REQUESTED",
+              "AVAILABILITY_UNLOCKED",
+              "DOCUMENT_APPROVED",
+              "DOCUMENT_REJECTED"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "patientCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patientcode"
+          },
+          "unseen": {
+            "title": "Unseen",
+            "type": "boolean"
+          },
+          "until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Until"
+          }
+        },
+        "required": [
+          "kind",
+          "actionable",
+          "at",
+          "count",
+          "documentId",
+          "docType",
+          "patientCode",
+          "until",
+          "unseen"
+        ],
+        "title": "NotificationOut",
+        "type": "object"
+      },
+      "NotificationsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/NotificationOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "unread": {
+            "title": "Unread",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "unread",
+          "items"
+        ],
+        "title": "NotificationsOut",
+        "type": "object"
+      },
       "OccupiedByOut": {
         "properties": {
           "appointmentId": {
@@ -3972,6 +4091,51 @@
         "summary": "Pares que o pareamento automático formaria, sem persistir (Administrativo)",
         "tags": [
           "matching"
+        ]
+      }
+    },
+    "/api/notifications": {
+      "get": {
+        "operationId": "list_notifications_api_notifications_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Avisos do usuário logado (pendências e informativos)",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/notifications/seen": {
+      "post": {
+        "operationId": "mark_seen_api_notifications_seen_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Marca os avisos informativos como vistos (abriu a lista)",
+        "tags": [
+          "notifications"
         ]
       }
     },
