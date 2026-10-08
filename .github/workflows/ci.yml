@@ -76,5 +76,8 @@ jobs:
       - name: Tipos
         run: mypy app
 
+      - name: Contrato OpenAPI em dia
+        run: python -m scripts.export_openapi --check
+
       - name: Testes
         run: pytest -q

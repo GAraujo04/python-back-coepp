@@ -1,0 +1,4937 @@
+{
+  "components": {
+    "schemas": {
+      "AppointmentOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "patientCode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patientcode"
+          },
+          "patientId": {
+            "title": "Patientid",
+            "type": "string"
+          },
+          "roomId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomid"
+          },
+          "roomName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomname"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "internId",
+          "scheduledAt",
+          "status",
+          "notes",
+          "roomId",
+          "roomName"
+        ],
+        "title": "AppointmentOut",
+        "type": "object"
+      },
+      "AssignmentViewOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "internName": {
+            "title": "Internname",
+            "type": "string"
+          },
+          "patientName": {
+            "title": "Patientname",
+            "type": "string"
+          },
+          "supervisorId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisorid"
+          },
+          "supervisorName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisorname"
+          }
+        },
+        "required": [
+          "id",
+          "patientName",
+          "internId",
+          "internName",
+          "supervisorId",
+          "supervisorName",
+          "active"
+        ],
+        "title": "AssignmentViewOut",
+        "type": "object"
+      },
+      "AttendancePeriodIn": {
+        "properties": {
+          "endDate": {
+            "format": "date",
+            "title": "Enddate",
+            "type": "string"
+          },
+          "startDate": {
+            "format": "date",
+            "title": "Startdate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "startDate",
+          "endDate"
+        ],
+        "title": "AttendancePeriodIn",
+        "type": "object"
+      },
+      "AttendancePeriodOut": {
+        "properties": {
+          "endDate": {
+            "format": "date",
+            "title": "Enddate",
+            "type": "string"
+          },
+          "startDate": {
+            "format": "date",
+            "title": "Startdate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "startDate",
+          "endDate"
+        ],
+        "title": "AttendancePeriodOut",
+        "type": "object"
+      },
+      "AttendanceRequest": {
+        "properties": {
+          "outcome": {
+            "enum": [
+              "ATTENDED",
+              "NO_SHOW"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome"
+        ],
+        "title": "AttendanceRequest",
+        "type": "object"
+      },
+      "AvailabilityChangeRequestIn": {
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ],
+        "title": "AvailabilityChangeRequestIn",
+        "type": "object"
+      },
+      "AvailabilityLockOut": {
+        "properties": {
+          "editable": {
+            "title": "Editable",
+            "type": "boolean"
+          },
+          "requestReason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestreason"
+          },
+          "requestedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestedat"
+          },
+          "unlockedUntil": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlockeduntil"
+          }
+        },
+        "required": [
+          "editable",
+          "unlockedUntil",
+          "requestedAt",
+          "requestReason"
+        ],
+        "title": "AvailabilityLockOut",
+        "type": "object"
+      },
+      "AvailabilityUnlockIn": {
+        "properties": {
+          "hours": {
+            "default": 48,
+            "maximum": 168.0,
+            "minimum": 1.0,
+            "title": "Hours",
+            "type": "integer"
+          }
+        },
+        "title": "AvailabilityUnlockIn",
+        "type": "object"
+      },
+      "AvailabilityUnlockOut": {
+        "properties": {
+          "unlockedUntil": {
+            "title": "Unlockeduntil",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unlockedUntil"
+        ],
+        "title": "AvailabilityUnlockOut",
+        "type": "object"
+      },
+      "AvailabilityWindowIn": {
+        "properties": {
+          "endTime": {
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "title": "Endtime",
+            "type": "string"
+          },
+          "startTime": {
+            "pattern": "^([01]\\d|2[0-3]):([0-5]\\d)$",
+            "title": "Starttime",
+            "type": "string"
+          },
+          "weekday": {
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Weekday",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday",
+          "startTime",
+          "endTime"
+        ],
+        "title": "AvailabilityWindowIn",
+        "type": "object"
+      },
+      "AvailabilityWindowOut": {
+        "properties": {
+          "endTime": {
+            "title": "Endtime",
+            "type": "string"
+          },
+          "startTime": {
+            "title": "Starttime",
+            "type": "string"
+          },
+          "weekday": {
+            "title": "Weekday",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday",
+          "startTime",
+          "endTime"
+        ],
+        "title": "AvailabilityWindowOut",
+        "type": "object"
+      },
+      "CancelRequest": {
+        "properties": {
+          "following": {
+            "default": false,
+            "title": "Following",
+            "type": "boolean"
+          }
+        },
+        "title": "CancelRequest",
+        "type": "object"
+      },
+      "CancelResponse": {
+        "properties": {
+          "cancelled": {
+            "title": "Cancelled",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cancelled"
+        ],
+        "title": "CancelResponse",
+        "type": "object"
+      },
+      "CommentOut": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "createdAt": {
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reviewerName": {
+            "title": "Reviewername",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "reviewerName",
+          "createdAt"
+        ],
+        "title": "CommentOut",
+        "type": "object"
+      },
+      "CompleteInternProfileRequest": {
+        "properties": {
+          "academicSupervisorId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Academicsupervisorid"
+          },
+          "acceptedTermVersion": {
+            "minLength": 1,
+            "title": "Acceptedtermversion",
+            "type": "string"
+          },
+          "disciplinaId": {
+            "title": "Disciplinaid",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "pendingSupervisorName": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pendingsupervisorname"
+          },
+          "periodo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodo"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "pattern": "^\\(\\d{2}\\) \\d{4,5}-\\d{4}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "ra": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{6}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra"
+          },
+          "turma": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turma"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityWindowIn"
+            },
+            "minItems": 1,
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "disciplinaId",
+          "windows",
+          "acceptedTermVersion"
+        ],
+        "title": "CompleteInternProfileRequest",
+        "type": "object"
+      },
+      "CreateDisciplinaRequest": {
+        "properties": {
+          "name": {
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CreateDisciplinaRequest",
+        "type": "object"
+      },
+      "CreateManualMatchRequest": {
+        "properties": {
+          "acknowledgeWarnings": {
+            "default": false,
+            "title": "Acknowledgewarnings",
+            "type": "boolean"
+          },
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "patientId": {
+            "title": "Patientid",
+            "type": "string"
+          },
+          "roomId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomid"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId",
+          "internId",
+          "scheduledAt"
+        ],
+        "title": "CreateManualMatchRequest",
+        "type": "object"
+      },
+      "CreatePatientRequest": {
+        "properties": {
+          "birthDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthdate"
+          },
+          "cpf": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpf"
+          },
+          "disabilityOtherText": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabilityothertext"
+          },
+          "disabilityTypes": {
+            "items": {
+              "enum": [
+                "FISICA",
+                "VISUAL",
+                "AUDITIVA",
+                "INTELECTUAL",
+                "PSICOSSOCIAL",
+                "MULTIPLA",
+                "OUTRA"
+              ],
+              "type": "string"
+            },
+            "title": "Disabilitytypes",
+            "type": "array"
+          },
+          "fullName": {
+            "minLength": 2,
+            "title": "Fullname",
+            "type": "string"
+          },
+          "guardian": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GuardianRequest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hasDisability": {
+            "default": false,
+            "title": "Hasdisability",
+            "type": "boolean"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "pattern": "^\\(\\d{2}\\) \\d{4,5}-\\d{4}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "required": [
+          "fullName"
+        ],
+        "title": "CreatePatientRequest",
+        "type": "object"
+      },
+      "CreateRoomRequest": {
+        "properties": {
+          "category": {
+            "default": "PADRAO",
+            "enum": [
+              "PADRAO",
+              "ACESSIVEL",
+              "INFANTIL",
+              "GRUPO"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CreateRoomRequest",
+        "type": "object"
+      },
+      "CreateScreeningRequest": {
+        "properties": {
+          "coAuthorIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Coauthorids",
+            "type": "array"
+          },
+          "content": {
+            "additionalProperties": true,
+            "title": "Content",
+            "type": "object"
+          },
+          "patientId": {
+            "title": "Patientid",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "SCREENING_ADULT",
+              "SCREENING_CHILD",
+              "EVOLUTION",
+              "PSYCH_ASSESSMENT",
+              "WEEKLY_REPORT",
+              "PARTIAL_REPORT",
+              "FINAL_REPORT",
+              "PSYCH_REPORT"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "patientId"
+        ],
+        "title": "CreateScreeningRequest",
+        "type": "object"
+      },
+      "CreateUserRequest": {
+        "properties": {
+          "crp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crp"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "password": {
+            "title": "Password",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "ra": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra"
+          },
+          "role": {
+            "enum": [
+              "PATIENT",
+              "INTERN",
+              "SUPERVISOR",
+              "ADMIN"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "fullName",
+          "email",
+          "password"
+        ],
+        "title": "CreateUserRequest",
+        "type": "object"
+      },
+      "DisabilitySummaryOut": {
+        "properties": {
+          "otherText": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Othertext"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "otherText"
+        ],
+        "title": "DisabilitySummaryOut",
+        "type": "object"
+      },
+      "DisciplinaOptionOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "DisciplinaOptionOut",
+        "type": "object"
+      },
+      "DisciplinaOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "active"
+        ],
+        "title": "DisciplinaOut",
+        "type": "object"
+      },
+      "DocForReviewOut": {
+        "properties": {
+          "authorName": {
+            "title": "Authorname",
+            "type": "string"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/CommentOut"
+            },
+            "title": "Comments",
+            "type": "array"
+          },
+          "content": {
+            "additionalProperties": true,
+            "title": "Content",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numero"
+          },
+          "patientCode": {
+            "title": "Patientcode",
+            "type": "string"
+          },
+          "patientName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patientname"
+          },
+          "signatures": {
+            "items": {
+              "$ref": "#/components/schemas/SignatureOut"
+            },
+            "title": "Signatures",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "type",
+          "status",
+          "authorName",
+          "patientName",
+          "patientCode",
+          "updatedAt",
+          "content",
+          "comments",
+          "signatures"
+        ],
+        "title": "DocForReviewOut",
+        "type": "object"
+      },
+      "GuardianIn": {
+        "properties": {
+          "cpf": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpf"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "pattern": "^\\(\\d{2}\\) \\d{4,5}-\\d{4}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "relationship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relationship"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "GuardianIn",
+        "type": "object"
+      },
+      "GuardianRequest": {
+        "properties": {
+          "cpf": {
+            "anyOf": [
+              {
+                "pattern": "^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cpf"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "pattern": "^\\(\\d{2}\\) \\d{4,5}-\\d{4}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "relationship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relationship"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "GuardianRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "InternLoginRequest": {
+        "properties": {
+          "linkEmail": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linkemail"
+          },
+          "senhaRm": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Senharm",
+            "type": "string"
+          },
+          "usuarioRm": {
+            "pattern": "^\\d{11}$",
+            "title": "Usuariorm",
+            "type": "string"
+          }
+        },
+        "required": [
+          "usuarioRm",
+          "senhaRm"
+        ],
+        "title": "InternLoginRequest",
+        "type": "object"
+      },
+      "LinkSupervisorRequest": {
+        "properties": {
+          "supervisorId": {
+            "title": "Supervisorid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "supervisorId"
+        ],
+        "title": "LinkSupervisorRequest",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "MatchResultOut": {
+        "properties": {
+          "appointmentId": {
+            "title": "Appointmentid",
+            "type": "string"
+          },
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "patientId": {
+            "title": "Patientid",
+            "type": "string"
+          },
+          "roomId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomid"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "appointmentId",
+          "internId",
+          "patientId",
+          "roomId",
+          "scheduledAt"
+        ],
+        "title": "MatchResultOut",
+        "type": "object"
+      },
+      "MatchSuggestionOut": {
+        "properties": {
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "internName": {
+            "title": "Internname",
+            "type": "string"
+          },
+          "patientId": {
+            "title": "Patientid",
+            "type": "string"
+          },
+          "patientName": {
+            "title": "Patientname",
+            "type": "string"
+          },
+          "roomId": {
+            "title": "Roomid",
+            "type": "string"
+          },
+          "roomName": {
+            "title": "Roomname",
+            "type": "string"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId",
+          "patientName",
+          "internId",
+          "internName",
+          "roomId",
+          "roomName",
+          "scheduledAt"
+        ],
+        "title": "MatchSuggestionOut",
+        "type": "object"
+      },
+      "MatchViewOut": {
+        "properties": {
+          "appointmentId": {
+            "title": "Appointmentid",
+            "type": "string"
+          },
+          "internName": {
+            "title": "Internname",
+            "type": "string"
+          },
+          "patientCode": {
+            "title": "Patientcode",
+            "type": "string"
+          },
+          "patientName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patientname"
+          },
+          "roomName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomname"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "appointmentId",
+          "scheduledAt",
+          "status",
+          "internName",
+          "patientName",
+          "patientCode",
+          "roomName"
+        ],
+        "title": "MatchViewOut",
+        "type": "object"
+      },
+      "OccupiedByOut": {
+        "properties": {
+          "appointmentId": {
+            "title": "Appointmentid",
+            "type": "string"
+          },
+          "internName": {
+            "title": "Internname",
+            "type": "string"
+          },
+          "patientName": {
+            "title": "Patientname",
+            "type": "string"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "appointmentId",
+          "scheduledAt",
+          "patientName",
+          "internName"
+        ],
+        "title": "OccupiedByOut",
+        "type": "object"
+      },
+      "PatientLoginRequest": {
+        "properties": {
+          "birthDate": {
+            "title": "Birthdate",
+            "type": "string"
+          },
+          "cpf": {
+            "title": "Cpf",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cpf",
+          "birthDate"
+        ],
+        "title": "PatientLoginRequest",
+        "type": "object"
+      },
+      "PatientSummaryOut": {
+        "properties": {
+          "birthDate": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Birthdate"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "disabilities": {
+            "items": {
+              "$ref": "#/components/schemas/DisabilitySummaryOut"
+            },
+            "title": "Disabilities",
+            "type": "array"
+          },
+          "fullName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fullname"
+          },
+          "hasDisability": {
+            "title": "Hasdisability",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "isMinor": {
+            "title": "Isminor",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "fullName",
+          "birthDate",
+          "isMinor",
+          "hasDisability",
+          "disabilities"
+        ],
+        "title": "PatientSummaryOut",
+        "type": "object"
+      },
+      "PendingAvailabilityRequestOut": {
+        "properties": {
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "internName": {
+            "title": "Internname",
+            "type": "string"
+          },
+          "ra": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "requestedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestedat"
+          },
+          "unlockedUntil": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unlockeduntil"
+          }
+        },
+        "required": [
+          "internId",
+          "internName",
+          "ra",
+          "requestedAt",
+          "reason",
+          "unlockedUntil"
+        ],
+        "title": "PendingAvailabilityRequestOut",
+        "type": "object"
+      },
+      "PendingMatchRequestOut": {
+        "properties": {
+          "createdAt": {
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "patientName": {
+            "title": "Patientname",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "suggestedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestedat"
+          },
+          "suggestedInternName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggestedinternname"
+          }
+        },
+        "required": [
+          "id",
+          "patientName",
+          "suggestedInternName",
+          "suggestedAt",
+          "status",
+          "createdAt"
+        ],
+        "title": "PendingMatchRequestOut",
+        "type": "object"
+      },
+      "PendingSupervisorOut": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "pendingSupervisorName": {
+            "title": "Pendingsupervisorname",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "email",
+          "pendingSupervisorName"
+        ],
+        "title": "PendingSupervisorOut",
+        "type": "object"
+      },
+      "PortalAppointmentOut": {
+        "properties": {
+          "internName": {
+            "title": "Internname",
+            "type": "string"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scheduledAt",
+          "status",
+          "internName"
+        ],
+        "title": "PortalAppointmentOut",
+        "type": "object"
+      },
+      "PortalDataOut": {
+        "properties": {
+          "appointments": {
+            "items": {
+              "$ref": "#/components/schemas/PortalAppointmentOut"
+            },
+            "title": "Appointments",
+            "type": "array"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "pendingSlots": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Pendingslots",
+            "type": "array"
+          }
+        },
+        "required": [
+          "code",
+          "fullName",
+          "appointments",
+          "pendingSlots"
+        ],
+        "title": "PortalDataOut",
+        "type": "object"
+      },
+      "QueueItemOut": {
+        "properties": {
+          "authorName": {
+            "title": "Authorname",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numero"
+          },
+          "patientCode": {
+            "title": "Patientcode",
+            "type": "string"
+          },
+          "patientName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patientname"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "type",
+          "status",
+          "authorName",
+          "patientName",
+          "patientCode",
+          "updatedAt"
+        ],
+        "title": "QueueItemOut",
+        "type": "object"
+      },
+      "ReassignRequest": {
+        "properties": {
+          "appointmentId": {
+            "title": "Appointmentid",
+            "type": "string"
+          },
+          "roomId": {
+            "title": "Roomid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "appointmentId",
+          "roomId"
+        ],
+        "title": "ReassignRequest",
+        "type": "object"
+      },
+      "RefreshResponse": {
+        "properties": {
+          "accessToken": {
+            "title": "Accesstoken",
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessToken"
+        ],
+        "title": "RefreshResponse",
+        "type": "object"
+      },
+      "RegisterPatientRequest": {
+        "properties": {
+          "birthDate": {
+            "title": "Birthdate",
+            "type": "string"
+          },
+          "cpf": {
+            "pattern": "^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$",
+            "title": "Cpf",
+            "type": "string"
+          },
+          "disabilityOtherText": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabilityothertext"
+          },
+          "disabilityTypes": {
+            "items": {
+              "enum": [
+                "FISICA",
+                "VISUAL",
+                "AUDITIVA",
+                "INTELECTUAL",
+                "PSICOSSOCIAL",
+                "MULTIPLA",
+                "OUTRA"
+              ],
+              "type": "string"
+            },
+            "title": "Disabilitytypes",
+            "type": "array"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "fullName": {
+            "minLength": 2,
+            "title": "Fullname",
+            "type": "string"
+          },
+          "guardian": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GuardianIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "hasDisability": {
+            "default": false,
+            "title": "Hasdisability",
+            "type": "boolean"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "pattern": "^\\(\\d{2}\\) \\d{4,5}-\\d{4}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityWindowIn"
+            },
+            "minItems": 1,
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "fullName",
+          "email",
+          "cpf",
+          "birthDate",
+          "windows"
+        ],
+        "title": "RegisterPatientRequest",
+        "type": "object"
+      },
+      "RegisterPatientResponse": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code"
+        ],
+        "title": "RegisterPatientResponse",
+        "type": "object"
+      },
+      "RegisterStudentRequest": {
+        "properties": {
+          "academicSupervisorId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Academicsupervisorid"
+          },
+          "acceptedTermVersion": {
+            "minLength": 1,
+            "title": "Acceptedtermversion",
+            "type": "string"
+          },
+          "disciplinaId": {
+            "title": "Disciplinaid",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "fullName": {
+            "minLength": 2,
+            "title": "Fullname",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          },
+          "pendingSupervisorName": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pendingsupervisorname"
+          },
+          "periodo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Periodo"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "pattern": "^\\(\\d{2}\\) \\d{4,5}-\\d{4}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "ra": {
+            "pattern": "^\\d{6}$",
+            "title": "Ra",
+            "type": "string"
+          },
+          "turma": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Turma"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityWindowIn"
+            },
+            "minItems": 1,
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "fullName",
+          "email",
+          "ra",
+          "password",
+          "disciplinaId",
+          "windows",
+          "acceptedTermVersion"
+        ],
+        "title": "RegisterStudentRequest",
+        "type": "object"
+      },
+      "RegisterStudentResponse": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "RegisterStudentResponse",
+        "type": "object"
+      },
+      "RegistrationOptionsOut": {
+        "properties": {
+          "disciplinas": {
+            "items": {
+              "$ref": "#/components/schemas/DisciplinaOptionOut"
+            },
+            "title": "Disciplinas",
+            "type": "array"
+          },
+          "supervisors": {
+            "items": {
+              "$ref": "#/components/schemas/SupervisorOptionOut"
+            },
+            "title": "Supervisors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "supervisors",
+          "disciplinas"
+        ],
+        "title": "RegistrationOptionsOut",
+        "type": "object"
+      },
+      "ReportItemOut": {
+        "properties": {
+          "authorId": {
+            "title": "Authorid",
+            "type": "string"
+          },
+          "authorName": {
+            "title": "Authorname",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numero"
+          },
+          "patientCode": {
+            "title": "Patientcode",
+            "type": "string"
+          },
+          "patientName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Patientname"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "submittedAt": {
+            "title": "Submittedat",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "title": "Updatedat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "type",
+          "status",
+          "authorName",
+          "patientName",
+          "patientCode",
+          "updatedAt",
+          "authorId",
+          "submittedAt"
+        ],
+        "title": "ReportItemOut",
+        "type": "object"
+      },
+      "RescheduleRequest": {
+        "properties": {
+          "roomId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomid"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scheduledAt"
+        ],
+        "title": "RescheduleRequest",
+        "type": "object"
+      },
+      "ResponsibilityTermOut": {
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "content"
+        ],
+        "title": "ResponsibilityTermOut",
+        "type": "object"
+      },
+      "RoomOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "category": {
+            "enum": [
+              "PADRAO",
+              "ACESSIVEL",
+              "INFANTIL",
+              "GRUPO"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "active"
+        ],
+        "title": "RoomOut",
+        "type": "object"
+      },
+      "RoomStatusOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "category": {
+            "enum": [
+              "PADRAO",
+              "ACESSIVEL",
+              "INFANTIL",
+              "GRUPO"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "occupiedBy": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OccupiedByOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "category",
+          "active",
+          "occupiedBy"
+        ],
+        "title": "RoomStatusOut",
+        "type": "object"
+      },
+      "RunMatchingResponse": {
+        "properties": {
+          "matched": {
+            "title": "Matched",
+            "type": "integer"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/MatchResultOut"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "matched",
+          "results"
+        ],
+        "title": "RunMatchingResponse",
+        "type": "object"
+      },
+      "ScheduleRequest": {
+        "properties": {
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "patientId": {
+            "title": "Patientid",
+            "type": "string"
+          },
+          "roomId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomid"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patientId",
+          "internId",
+          "scheduledAt"
+        ],
+        "title": "ScheduleRequest",
+        "type": "object"
+      },
+      "ScreeningOut": {
+        "properties": {
+          "authorId": {
+            "title": "Authorid",
+            "type": "string"
+          },
+          "coAuthorIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Coauthorids",
+            "type": "array"
+          },
+          "content": {
+            "additionalProperties": true,
+            "title": "Content",
+            "type": "object"
+          },
+          "createdAt": {
+            "title": "Createdat",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "numero": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Numero"
+          },
+          "patientId": {
+            "title": "Patientid",
+            "type": "string"
+          },
+          "signatures": {
+            "items": {
+              "$ref": "#/components/schemas/SignatureOut"
+            },
+            "title": "Signatures",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "SCREENING_ADULT",
+              "SCREENING_CHILD",
+              "EVOLUTION",
+              "PSYCH_ASSESSMENT",
+              "WEEKLY_REPORT",
+              "PARTIAL_REPORT",
+              "FINAL_REPORT",
+              "PSYCH_REPORT"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "updatedAt": {
+            "title": "Updatedat",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "numero",
+          "type",
+          "status",
+          "version",
+          "patientId",
+          "authorId",
+          "coAuthorIds",
+          "content",
+          "signatures",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "ScreeningOut",
+        "type": "object"
+      },
+      "SeriesResultOut": {
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "pairs": {
+            "title": "Pairs",
+            "type": "integer"
+          },
+          "pairsWithoutAnchor": {
+            "title": "Pairswithoutanchor",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "created",
+          "pairs",
+          "pairsWithoutAnchor"
+        ],
+        "title": "SeriesResultOut",
+        "type": "object"
+      },
+      "SessionResponse": {
+        "properties": {
+          "accessToken": {
+            "title": "Accesstoken",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserPublic"
+          }
+        },
+        "required": [
+          "accessToken",
+          "user"
+        ],
+        "title": "SessionResponse",
+        "type": "object"
+      },
+      "SignatureOut": {
+        "properties": {
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "signedAt": {
+            "title": "Signedat",
+            "type": "string"
+          },
+          "signerName": {
+            "title": "Signername",
+            "type": "string"
+          },
+          "signerRef": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signerref"
+          },
+          "signerRole": {
+            "title": "Signerrole",
+            "type": "string"
+          }
+        },
+        "required": [
+          "signerName",
+          "signerRole",
+          "signerRef",
+          "provider",
+          "signedAt"
+        ],
+        "title": "SignatureOut",
+        "type": "object"
+      },
+      "SupervisorOptionOut": {
+        "properties": {
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fullName"
+        ],
+        "title": "SupervisorOptionOut",
+        "type": "object"
+      },
+      "TransitionRequest": {
+        "properties": {
+          "action": {
+            "enum": [
+              "SUBMIT",
+              "TAKE",
+              "REQUEST_CHANGES",
+              "REJECT",
+              "APPROVE",
+              "REOPEN"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "TransitionRequest",
+        "type": "object"
+      },
+      "TransitionResponse": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "title": "TransitionResponse",
+        "type": "object"
+      },
+      "UpdateAssignmentRequest": {
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "internId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Internid"
+          },
+          "supervisorId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supervisorid"
+          }
+        },
+        "title": "UpdateAssignmentRequest",
+        "type": "object"
+      },
+      "UpdateAvailabilityWindowsRequest": {
+        "properties": {
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityWindowIn"
+            },
+            "minItems": 1,
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "windows"
+        ],
+        "title": "UpdateAvailabilityWindowsRequest",
+        "type": "object"
+      },
+      "UpdateDraftRequest": {
+        "properties": {
+          "content": {
+            "additionalProperties": true,
+            "title": "Content",
+            "type": "object"
+          },
+          "expectedVersion": {
+            "minimum": 1.0,
+            "title": "Expectedversion",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "content",
+          "expectedVersion"
+        ],
+        "title": "UpdateDraftRequest",
+        "type": "object"
+      },
+      "UpdateRoomRequest": {
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "PADRAO",
+                  "ACESSIVEL",
+                  "INFANTIL",
+                  "GRUPO"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "UpdateRoomRequest",
+        "type": "object"
+      },
+      "UserPublic": {
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "profileComplete": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profilecomplete"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "role"
+        ],
+        "title": "UserPublic",
+        "type": "object"
+      },
+      "UserPublicOut": {
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "crp": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crp"
+          },
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Department"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "fullName": {
+            "title": "Fullname",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "ra": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fullName",
+          "email",
+          "role",
+          "crp",
+          "ra",
+          "phone",
+          "department",
+          "active"
+        ],
+        "title": "UserPublicOut",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "description": "Prontuário Eletrônico do Paciente. Contrato gerado a partir das rotas (schema-first).",
+    "title": "PEP API — Clínica-Escola de Psicologia",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/appointments": {
+      "get": {
+        "operationId": "list_agenda_api_appointments_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentOut"
+                  },
+                  "title": "Response List Agenda Api Appointments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista a agenda visível ao usuário (escopo por papel/vínculo via RLS)",
+        "tags": [
+          "appointments"
+        ]
+      },
+      "post": {
+        "operationId": "schedule_api_appointments_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Agenda uma sessão (Administrativo)",
+        "tags": [
+          "appointments"
+        ]
+      }
+    },
+    "/api/appointments/generate-series": {
+      "post": {
+        "operationId": "generate_series_api_appointments_generate_series_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeriesResultOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Agenda as consultas semanais dos vínculos ativos até o fim do período (idempotente) — Administrativo",
+        "tags": [
+          "attendance-period"
+        ]
+      }
+    },
+    "/api/appointments/{appointment_id}/attendance": {
+      "patch": {
+        "operationId": "register_attendance_api_appointments__appointment_id__attendance_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Registra presença/falta de uma sessão",
+        "tags": [
+          "appointments"
+        ]
+      }
+    },
+    "/api/appointments/{appointment_id}/cancel": {
+      "patch": {
+        "operationId": "cancel_api_appointments__appointment_id__cancel_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CancelResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancela a consulta (ou ela e as seguintes do mesmo par) — Administrativo",
+        "tags": [
+          "appointments"
+        ]
+      }
+    },
+    "/api/appointments/{appointment_id}/reschedule": {
+      "patch": {
+        "operationId": "reschedule_api_appointments__appointment_id__reschedule_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "appointment_id",
+            "required": true,
+            "schema": {
+              "title": "Appointment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remarca data/hora e sala de uma consulta — Administrativo",
+        "tags": [
+          "appointments"
+        ]
+      }
+    },
+    "/api/assignments": {
+      "get": {
+        "operationId": "list_assignments_api_assignments_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AssignmentViewOut"
+                  },
+                  "title": "Response List Assignments Api Assignments Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista vínculos (paciente↔estagiário↔supervisor) — Admin",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/assignments/{assignment_id}": {
+      "patch": {
+        "operationId": "update_assignment_api_assignments__assignment_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "assignment_id",
+            "required": true,
+            "schema": {
+              "title": "Assignment Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Altera estagiário/supervisor de um vínculo, ou o encerra (active=false) — Admin",
+        "tags": [
+          "assignments"
+        ]
+      }
+    },
+    "/api/auth/intern-login": {
+      "post": {
+        "operationId": "intern_login_api_auth_intern_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InternLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login do estagiário via TOTVS RM (usuário/senha institucionais)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Autentica e inicia sessão",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout_api_auth_logout_post",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Encerra a sessão",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPublic"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Dados do usuário autenticado",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/patient-login": {
+      "post": {
+        "operationId": "patient_login_api_auth_patient_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login do paciente por CPF + data de nascimento (sem senha)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "refresh_api_auth_refresh_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Renova o access token (rotaciona o refresh)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/availability-requests": {
+      "get": {
+        "operationId": "list_requests_api_availability_requests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PendingAvailabilityRequestOut"
+                  },
+                  "title": "Response List Requests Api Availability Requests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Pedidos de mudança de disponibilidade e liberações em vigor (Supervisor: seus estagiários; Admin: todos)",
+        "tags": [
+          "availability-lock"
+        ]
+      }
+    },
+    "/api/disciplinas": {
+      "get": {
+        "operationId": "list_disciplinas_api_disciplinas_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DisciplinaOut"
+                  },
+                  "title": "Response List Disciplinas Api Disciplinas Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista disciplinas (Admin)",
+        "tags": [
+          "disciplinas"
+        ]
+      },
+      "post": {
+        "operationId": "create_disciplina_api_disciplinas_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDisciplinaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisciplinaOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cadastra uma disciplina (Admin)",
+        "tags": [
+          "disciplinas"
+        ]
+      }
+    },
+    "/api/documents/reports": {
+      "get": {
+        "operationId": "reports_api_documents_reports_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReportItemOut"
+                  },
+                  "title": "Response Reports Api Documents Reports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Documentos enviados (não rascunho), em ordem de chegada — Supervisor (seus pacientes) / Admin",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/api/documents/review-queue": {
+      "get": {
+        "operationId": "review_queue_api_documents_review_queue_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QueueItemOut"
+                  },
+                  "title": "Response Review Queue Api Documents Review Queue Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Fila de revisão (Supervisor/Admin)",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/api/documents/{document_id}/review": {
+      "get": {
+        "operationId": "get_review_api_documents__document_id__review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocForReviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lê um documento para revisão (Supervisor/Admin)",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/api/documents/{document_id}/transitions": {
+      "post": {
+        "operationId": "transition_api_documents__document_id__transitions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransitionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransitionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Executa uma transição no documento (submeter/aprovar/solicitar ajustes/rejeitar)",
+        "tags": [
+          "documents"
+        ]
+      }
+    },
+    "/api/enrollment/availability-change-request": {
+      "post": {
+        "operationId": "request_availability_change_api_enrollment_availability_change_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvailabilityChangeRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Estagiário pede ao supervisor a liberação para alterar a disponibilidade",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/api/enrollment/availability-lock": {
+      "get": {
+        "operationId": "get_availability_lock_api_enrollment_availability_lock_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityLockOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Situação da trava de disponibilidade do estagiário logado (editável? pedido pendente?)",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/api/enrollment/availability-windows": {
+      "get": {
+        "operationId": "get_availability_windows_api_enrollment_availability_windows_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AvailabilityWindowOut"
+                  },
+                  "title": "Response Get Availability Windows Api Enrollment Availability Windows Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Disponibilidade recorrente atual do estagiário logado",
+        "tags": [
+          "enrollment"
+        ]
+      },
+      "put": {
+        "operationId": "put_availability_windows_api_enrollment_availability_windows_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAvailabilityWindowsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Substitui a disponibilidade do estagiário logado — só com liberação do supervisor (403 se travada)",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/api/enrollment/complete-profile": {
+      "patch": {
+        "operationId": "complete_profile_api_enrollment_complete_profile_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteInternProfileRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Completa o cadastro do estagiário autenticado (1º acesso via TOTVS ou enquanto perfil incompleto)",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/api/interns/{intern_id}/availability-relock": {
+      "post": {
+        "operationId": "relock_api_interns__intern_id__availability_relock_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "intern_id",
+            "required": true,
+            "schema": {
+              "title": "Intern Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Recusa o pedido ou revoga a liberação — a disponibilidade volta a ficar travada",
+        "tags": [
+          "availability-lock"
+        ]
+      }
+    },
+    "/api/interns/{intern_id}/availability-unlock": {
+      "post": {
+        "operationId": "unlock_api_interns__intern_id__availability_unlock_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "intern_id",
+            "required": true,
+            "schema": {
+              "title": "Intern Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AvailabilityUnlockIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityUnlockOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Libera o estagiário para alterar a disponibilidade por um prazo (uma alteração)",
+        "tags": [
+          "availability-lock"
+        ]
+      }
+    },
+    "/api/matching/manual": {
+      "post": {
+        "operationId": "create_manual_match_api_matching_manual_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManualMatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cria um match manual, sobrepondo a sugestão automática (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/matching/matches": {
+      "get": {
+        "operationId": "list_matches_api_matching_matches_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatchViewOut"
+                  },
+                  "title": "Response List Matches Api Matching Matches Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista as consultas/pareamentos (Admin e Supervisor)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/matching/pending-requests": {
+      "get": {
+        "operationId": "pending_requests_api_matching_pending_requests_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PendingMatchRequestOut"
+                  },
+                  "title": "Response Pending Requests Api Matching Pending Requests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Alertas de fallback por aproximação — pacientes sem match exato nesta rodada (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/matching/pending-requests/{request_id}/resolve": {
+      "patch": {
+        "operationId": "resolve_pending_request_api_matching_pending_requests__request_id__resolve_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Marca o alerta de fallback como resolvido — equipe já contatou o paciente (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/matching/run": {
+      "post": {
+        "operationId": "run_matching_api_matching_run_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunMatchingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Executa o pareamento por disponibilidade (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/matching/suggestions": {
+      "get": {
+        "operationId": "suggestions_api_matching_suggestions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatchSuggestionOut"
+                  },
+                  "title": "Response Suggestions Api Matching Suggestions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Pares que o pareamento automático formaria, sem persistir (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/patients": {
+      "get": {
+        "operationId": "list_patients_api_patients_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PatientSummaryOut"
+                  },
+                  "title": "Response List Patients Api Patients Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista pacientes vinculados ao usuário (nome descriptografado)",
+        "tags": [
+          "patients"
+        ]
+      },
+      "post": {
+        "operationId": "create_patient_api_patients_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePatientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatientSummaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cadastra um paciente (Administrativo). Responsável obrigatório se menor.",
+        "tags": [
+          "patients"
+        ]
+      }
+    },
+    "/api/portal/me": {
+      "get": {
+        "operationId": "portal_me_api_portal_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortalDataOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Portal do paciente: suas consultas e horários pendentes",
+        "tags": [
+          "patients"
+        ]
+      }
+    },
+    "/api/register/options": {
+      "get": {
+        "operationId": "registration_options_api_register_options_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegistrationOptionsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Opções para o autocadastro de aluno (supervisores + disciplinas)",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/api/register/patient": {
+      "post": {
+        "operationId": "register_patient_api_register_patient_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPatientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterPatientResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Autocadastro público de paciente (dados + login + disponibilidade)",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/api/register/responsibility-term": {
+      "get": {
+        "operationId": "responsibility_term_api_register_responsibility_term_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponsibilityTermOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Termo de responsabilidade vigente (versão + conteúdo), exibido no cadastro do aluno",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/api/register/student": {
+      "post": {
+        "operationId": "register_student_api_register_student_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterStudentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterStudentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Autocadastro público de aluno/estagiário (dados + disponibilidade)",
+        "tags": [
+          "enrollment"
+        ]
+      }
+    },
+    "/api/rooms": {
+      "get": {
+        "operationId": "list_rooms_api_rooms_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "includeInactive",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Includeinactive",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RoomStatusOut"
+                  },
+                  "title": "Response List Rooms Api Rooms Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista salas com status (ocupada/disponível) — Administrativo",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "post": {
+        "operationId": "create_room_api_rooms_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoomRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cadastra uma sala — Administrativo",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/rooms/reassign": {
+      "patch": {
+        "operationId": "reassign_api_rooms_reassign_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReassignRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Troca a sala de um agendamento, validando conflito — Administrativo",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/rooms/{room_id}": {
+      "patch": {
+        "operationId": "update_room_api_rooms__room_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "room_id",
+            "required": true,
+            "schema": {
+              "title": "Room Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoomRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Edita nome/categoria ou ativa/desativa uma sala — Administrativo",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/screenings": {
+      "get": {
+        "operationId": "list_screenings_api_screenings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScreeningOut"
+                  },
+                  "title": "Response List Screenings Api Screenings Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista triagens visíveis (escopo por RLS)",
+        "tags": [
+          "screening"
+        ]
+      },
+      "post": {
+        "operationId": "create_screening_api_screenings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScreeningRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cria uma triagem (rascunho) — Estagiário",
+        "tags": [
+          "screening"
+        ]
+      }
+    },
+    "/api/screenings/{screening_id}": {
+      "delete": {
+        "operationId": "delete_screening_api_screenings__screening_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "screening_id",
+            "required": true,
+            "schema": {
+              "title": "Screening Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Remove um documento — só RASCUNHO próprio/coautoria (ADMIN remove qualquer status)",
+        "tags": [
+          "screening"
+        ]
+      },
+      "get": {
+        "operationId": "get_screening_api_screenings__screening_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "screening_id",
+            "required": true,
+            "schema": {
+              "title": "Screening Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Obtém uma triagem (leitura auditada)",
+        "tags": [
+          "screening"
+        ]
+      },
+      "patch": {
+        "operationId": "update_draft_api_screenings__screening_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "screening_id",
+            "required": true,
+            "schema": {
+              "title": "Screening Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDraftRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScreeningOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Salva o rascunho da triagem (auto-save) — Estagiário",
+        "tags": [
+          "screening"
+        ]
+      }
+    },
+    "/api/settings/attendance-period": {
+      "get": {
+        "operationId": "get_period_api_settings_attendance_period_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/AttendancePeriodOut"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Period Api Settings Attendance Period Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Período de atendimentos vigente (null se não configurado) — Administrativo",
+        "tags": [
+          "attendance-period"
+        ]
+      },
+      "put": {
+        "operationId": "set_period_api_settings_attendance_period_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttendancePeriodIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttendancePeriodOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Define início e fim dos atendimentos do ciclo — Administrativo",
+        "tags": [
+          "attendance-period"
+        ]
+      }
+    },
+    "/api/users": {
+      "get": {
+        "operationId": "list_users_api_users_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "role",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "PATIENT",
+                    "INTERN",
+                    "SUPERVISOR",
+                    "ADMIN"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Role"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UserPublicOut"
+                  },
+                  "title": "Response List Users Api Users Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista usuários por papel (seletores de coautor/agendamento)",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "operationId": "create_user_api_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPublicOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cadastra aluno/estagiário ou supervisor (Administrativo)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users/pending-supervisors": {
+      "get": {
+        "operationId": "pending_supervisors_api_users_pending_supervisors_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PendingSupervisorOut"
+                  },
+                  "title": "Response Pending Supervisors Api Users Pending Supervisors Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Lista estagiários com supervisor pendente (opção \"Outro\" no autocadastro)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/users/{user_id}/link-supervisor": {
+      "patch": {
+        "operationId": "link_supervisor_api_users__user_id__link_supervisor_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkSupervisorRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Vincula um estagiário pendente a um supervisor cadastrado (Administrativo)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Readiness probe (checa banco de dados)",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/version": {
+      "get": {
+        "operationId": "version_version_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Version Version Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Build version",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  }
+}
