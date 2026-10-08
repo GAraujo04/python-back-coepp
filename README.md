@@ -86,6 +86,41 @@ comparar respostas diretamente.
 .venv/bin/mypy app/       # typecheck
 ```
 
+## Produção: backup e guarda das chaves
+
+O banco guarda prontuário clínico. Perder dados ou expô-los tem
+consequência legal (LGPD, CFP), então estas três coisas não são opcionais.
+
+**1. Backup do banco.** Backup completo diário e de log a cada hora (o
+banco precisa estar em recovery model FULL), com retenção definida pela
+coordenação — o CFP pede a guarda do prontuário por no mínimo 5 anos.
+
+```sql
+BACKUP DATABASE pep TO DISK = N'/var/opt/mssql/backup/pep_full.bak' WITH COMPRESSION, CHECKSUM, INIT;
+BACKUP LOG pep TO DISK = N'/var/opt/mssql/backup/pep_log.trn' WITH COMPRESSION, CHECKSUM;
+```
+
+Os arquivos de backup saem do servidor (outra máquina ou storage) — backup
+no mesmo disco do banco não sobrevive à perda do disco.
+
+**2. Guarda das chaves.** `ENCRYPTION_KEY` (e as de `ENCRYPTION_KEYS_RETIRED`,
+durante uma rotação) cifra o PII e o conteúdo clínico em repouso:
+
+- **Sem a chave, o backup é inútil**: nome, CPF, nascimento e todos os
+  documentos ficam ilegíveis, sem erro nenhum que avise. Guarde a chave num
+  cofre de segredos, com pelo menos duas pessoas da coordenação com acesso.
+- **A chave NUNCA fica junto do backup**: backup + chave no mesmo lugar é o
+  banco inteiro em claro para quem pegar os dois.
+- Rotação: nova chave em `ENCRYPTION_KEY` com `ENCRYPTION_KEY_ID`
+  incrementado, a anterior vai para `ENCRYPTION_KEYS_RETIRED` até tudo ser
+  reescrito (ver `.env.example`).
+
+Perder o `JWT_SECRET` não perde dado: trocá-lo só desloga todo mundo.
+
+**3. Teste de restauração.** Pelo menos uma vez por semestre, restaurar o
+backup mais recente numa máquina separada, com a chave do cofre, e abrir um
+documento pela API. Backup que nunca foi restaurado não é backup.
+
 ## Status (2026-09-02)
 
 Migração incremental, uma slice por vez (ver spec, seção 6 e 10). Slices
