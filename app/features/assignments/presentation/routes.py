@@ -70,7 +70,7 @@ def list_assignments(
 @router.patch(
     "/assignments/{assignment_id}",
     status_code=204,
-    summary="Altera estagiário e/ou supervisor de um vínculo já existente — Admin",
+    summary="Altera estagiário/supervisor de um vínculo, ou o encerra (active=false) — Admin",
 )
 def update_assignment(
     assignment_id: str,
@@ -81,8 +81,10 @@ def update_assignment(
     repo: SqlAlchemyAssignmentRepository = Depends(_get_repo),
     audit: AuditRecorder = Depends(_get_audit),
 ) -> None:
-    if not body.intern_id and not body.supervisor_id:
-        raise ValidationError("Informe ao menos um campo para alterar (estagiário ou supervisor).")
+    if not body.intern_id and not body.supervisor_id and body.active is None:
+        raise ValidationError("Informe ao menos um campo para alterar (estagiário, supervisor ou encerramento).")
+    if body.active is True:
+        raise ValidationError("Um vínculo encerrado não é reativado — faça um novo pareamento.")
     if body.intern_id:
         intern = db.get(User, body.intern_id)
         if not intern or intern.role != "INTERN" or not intern.active:
@@ -92,7 +94,9 @@ def update_assignment(
         if not supervisor or supervisor.role != "SUPERVISOR" or not supervisor.active:
             raise ValidationError("Supervisor inválido ou inativo.", {"supervisorId": body.supervisor_id})
 
-    repo.update(assignment_id, intern_id=body.intern_id, supervisor_id=body.supervisor_id)
+    counts = repo.update(
+        current.sub, assignment_id, intern_id=body.intern_id, supervisor_id=body.supervisor_id, active=body.active
+    )
     audit.record(
         AuditEvent(
             actor_id=current.sub,
@@ -100,6 +104,11 @@ def update_assignment(
             resource_type="assignment",
             resource_id=assignment_id,
             correlation_id=getattr(request.state, "correlation_id", None),
-            diff={"internId": body.intern_id, "supervisorId": body.supervisor_id},
+            diff={
+                "internId": body.intern_id,
+                "supervisorId": body.supervisor_id,
+                "active": body.active,
+                "appointments": counts,
+            },
         )
     )

@@ -29,6 +29,7 @@ class Appointment:
         notes: str | None,
         room_id: str | None = None,
         room_name: str | None = None,
+        patient_code: str | None = None,
     ) -> None:
         self.id = id
         self.patient_id = patient_id
@@ -38,6 +39,7 @@ class Appointment:
         self.notes = notes
         self.room_id = room_id
         self.room_name = room_name
+        self.patient_code = patient_code
 
     def register_attendance(self, outcome: AttendanceOutcome) -> None:
         """Registra presença/falta. Só é possível a partir de um agendamento SCHEDULED."""
@@ -47,6 +49,15 @@ class Appointment:
                 {"appointmentId": self.id, "status": self.status},
             )
         self.status = outcome
+
+    def assert_changeable(self) -> None:
+        """Cancelar ou remarcar só vale para consulta ainda marcada: uma
+        consulta realizada, faltada ou já cancelada é histórico."""
+        if self.status != "SCHEDULED":
+            raise ConflictError(
+                "Só é possível cancelar ou remarcar uma consulta ainda agendada.",
+                {"appointmentId": self.id, "status": self.status},
+            )
 
     @staticmethod
     def assert_future_or_today(scheduled_at: datetime) -> None:  # noqa: ARG004 - hook de domínio, ver nota

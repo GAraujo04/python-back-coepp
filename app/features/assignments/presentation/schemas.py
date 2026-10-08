@@ -24,3 +24,6 @@ class UpdateAssignmentRequest(CamelModel):
     # "anyOf" do JSON Schema, mesmo padrão dos outros slices).
     intern_id: str | None = None
     supervisor_id: str | None = None
+    # False encerra o vínculo (e cancela as consultas futuras). Reativar não
+    # é suportado: um vínculo novo nasce do pareamento.
+    active: bool | None = None

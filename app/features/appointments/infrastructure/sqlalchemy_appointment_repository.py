@@ -8,12 +8,14 @@ Porta features/appointments/infrastructure/prisma-appointment-repository.ts.
 
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ....shared.db.models import Appointment as AppointmentRow
 from ....shared.db.session import get_under_rls, with_rls_context
-from ....shared.errors.app_error import ConflictError
+from ....shared.errors.app_error import ConflictError, NotFoundError
 from ....shared.scheduling.room_conflict import find_room_conflict
 from ..domain.appointment import Appointment, AppointmentStatus
 from ..domain.appointment_repository import AccessContext, AppointmentRepository, NewAppointment
@@ -29,6 +31,7 @@ def _to_domain(row: AppointmentRow) -> Appointment:
         notes=row.notes,
         room_id=row.room_id,
         room_name=row.room.name if row.room else None,
+        patient_code=row.patient.code if row.patient else None,
     )
 
 
@@ -54,7 +57,7 @@ class SqlAlchemyAppointmentRepository(AppointmentRepository):
             )
             session.add(row)
             session.flush()
-            session.refresh(row, attribute_names=["room"])
+            session.refresh(row, attribute_names=["room", "patient"])
             return _to_domain(row)
 
         return with_rls_context(self._session, ctx.user_id, ctx.role, _do)
@@ -80,7 +83,49 @@ class SqlAlchemyAppointmentRepository(AppointmentRepository):
                 raise LookupError(f"Appointment {id} não encontrado dentro do contexto de RLS.")
             row.status = status
             session.flush()
-            session.refresh(row, attribute_names=["room"])
+            session.refresh(row, attribute_names=["room", "patient"])
+            return _to_domain(row)
+
+        return with_rls_context(self._session, ctx.user_id, ctx.role, _do)
+
+    def cancel(self, ctx: AccessContext, id: str, following: bool) -> int:
+        def _do(session: Session) -> int:
+            row = get_under_rls(session, AppointmentRow, id)
+            if not row:
+                raise NotFoundError("Agendamento não encontrado.")
+            rows = [row]
+            if following:
+                rows += session.scalars(
+                    select(AppointmentRow).where(
+                        AppointmentRow.patient_id == row.patient_id,
+                        AppointmentRow.intern_id == row.intern_id,
+                        AppointmentRow.status == "SCHEDULED",
+                        AppointmentRow.scheduled_at > row.scheduled_at,
+                    )
+                ).all()
+            for r in rows:
+                r.status = "CANCELLED"
+            session.flush()
+            return len(rows)
+
+        return with_rls_context(self._session, ctx.user_id, ctx.role, _do)
+
+    def reschedule(self, ctx: AccessContext, id: str, scheduled_at: datetime, room_id: str | None) -> Appointment:
+        def _do(session: Session) -> Appointment:
+            row = get_under_rls(session, AppointmentRow, id)
+            if not row:
+                raise NotFoundError("Agendamento não encontrado.")
+            if room_id:
+                conflict_id = find_room_conflict(session, room_id, scheduled_at, exclude_appointment_id=id)
+                if conflict_id:
+                    raise ConflictError(
+                        "A sala já está ocupada nesse horário.",
+                        {"roomId": room_id, "conflictingAppointmentId": conflict_id},
+                    )
+            row.scheduled_at = scheduled_at
+            row.room_id = room_id
+            session.flush()
+            session.refresh(row, attribute_names=["room", "patient"])
             return _to_domain(row)
 
         return with_rls_context(self._session, ctx.user_id, ctx.role, _do)

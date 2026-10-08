@@ -15,13 +15,21 @@ from ....shared.audit.audit_recorder import AuditRecorder
 from ....shared.audit.sql_audit_recorder import SqlAuditRecorder
 from ....shared.auth.jwt_auth import CurrentUser, get_current_user, require_role
 from ....shared.db.session import get_session
+from ..application.change_appointment import CancelAppointment, CancelInput, RescheduleAppointment, RescheduleInput
 from ..application.list_agenda import ListAgenda
 from ..application.register_attendance import RegisterAttendance, RegisterAttendanceInput
 from ..application.schedule_appointment import ScheduleAppointment, ScheduleInput
 from ..domain.appointment import Appointment
 from ..domain.appointment_repository import AccessContext, AppointmentRepository
 from ..infrastructure.sqlalchemy_appointment_repository import SqlAlchemyAppointmentRepository
-from .schemas import AppointmentOut, AttendanceRequest, ScheduleRequest
+from .schemas import (
+    AppointmentOut,
+    AttendanceRequest,
+    CancelRequest,
+    CancelResponse,
+    RescheduleRequest,
+    ScheduleRequest,
+)
 
 router = APIRouter(prefix="/api", tags=["appointments"])
 
@@ -53,6 +61,7 @@ def _serialize(a: Appointment) -> AppointmentOut:
         notes=a.notes,
         room_id=a.room_id,
         room_name=a.room_name,
+        patient_code=a.patient_code,
     )
 
 
@@ -115,6 +124,55 @@ def register_attendance(
             actor=_ctx_of(current),
             appointment_id=appointment_id,
             outcome=body.outcome,
+            correlation_id=getattr(request.state, "correlation_id", None),
+        )
+    )
+    return _serialize(updated)
+
+
+@router.patch(
+    "/appointments/{appointment_id}/cancel",
+    response_model=CancelResponse,
+    summary="Cancela a consulta (ou ela e as seguintes do mesmo par) — Administrativo",
+)
+def cancel(
+    appointment_id: str,
+    body: CancelRequest,
+    request: Request,
+    current: CurrentUser = Depends(require_role(["ADMIN"])),
+    repo: AppointmentRepository = Depends(_get_repo),
+    audit: AuditRecorder = Depends(_get_audit),
+) -> CancelResponse:
+    count = CancelAppointment(repo, audit).execute(
+        CancelInput(
+            actor=_ctx_of(current),
+            appointment_id=appointment_id,
+            following=body.following,
+            correlation_id=getattr(request.state, "correlation_id", None),
+        )
+    )
+    return CancelResponse(cancelled=count)
+
+
+@router.patch(
+    "/appointments/{appointment_id}/reschedule",
+    response_model=AppointmentOut,
+    summary="Remarca data/hora e sala de uma consulta — Administrativo",
+)
+def reschedule(
+    appointment_id: str,
+    body: RescheduleRequest,
+    request: Request,
+    current: CurrentUser = Depends(require_role(["ADMIN"])),
+    repo: AppointmentRepository = Depends(_get_repo),
+    audit: AuditRecorder = Depends(_get_audit),
+) -> AppointmentOut:
+    updated = RescheduleAppointment(repo, audit).execute(
+        RescheduleInput(
+            actor=_ctx_of(current),
+            appointment_id=appointment_id,
+            scheduled_at=body.scheduled_at,
+            room_id=body.room_id,
             correlation_id=getattr(request.state, "correlation_id", None),
         )
     )

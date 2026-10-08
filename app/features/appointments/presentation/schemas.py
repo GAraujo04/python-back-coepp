@@ -20,6 +20,9 @@ class AppointmentOut(CamelModel):
     notes: str | None
     room_id: str | None
     room_name: str | None
+    # Código, não nome: é como o estagiário identifica o paciente nas
+    # listas (o nome ele vê no prontuário).
+    patient_code: str | None = None
 
 
 class ScheduleRequest(CamelModel):
@@ -32,3 +35,17 @@ class ScheduleRequest(CamelModel):
 
 class AttendanceRequest(CamelModel):
     outcome: Literal["ATTENDED", "NO_SHOW"]
+
+
+class CancelRequest(CamelModel):
+    # True: cancela também as consultas seguintes ainda marcadas do mesmo par.
+    following: bool = False
+
+
+class CancelResponse(CamelModel):
+    cancelled: int
+
+
+class RescheduleRequest(CamelModel):
+    scheduled_at: str
+    room_id: str | None = None
