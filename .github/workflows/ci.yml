@@ -1,0 +1,80 @@
+# CI do backend: lint, tipos, migrations num SQL Server de verdade e testes
+# (inclusive os de integração, que exigem o banco — REQUIRE_DB=1 faz eles
+# FALHAREM em vez de serem pulados se o banco não subir).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    services:
+      mssql:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: 'Y'
+          MSSQL_SA_PASSWORD: Ci_Password_2026!
+          MSSQL_PID: Developer
+        ports: ['1433:1433']
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Ci_Password_2026!' -C -Q 'SELECT 1'"
+          --health-interval 10s --health-timeout 5s --health-retries 20 --health-start-period 30s
+    env:
+      APP_ENV: test
+      DATABASE_URL: mssql+pyodbc://sa:Ci_Password_2026!@localhost:1433/pep?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes&Encrypt=yes
+      REQUIRE_DB: '1'
+      TOTVS_MOCK: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+
+      - name: Driver ODBC 18
+        run: |
+          if odbcinst -q -d 2>/dev/null | grep -q "ODBC Driver 18 for SQL Server"; then exit 0; fi
+          curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+          curl -fsSL https://packages.microsoft.com/config/ubuntu/24.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
+
+      - name: Dependências
+        run: pip install -e ".[dev]"
+
+      - name: Segredos efêmeros
+        # Gerados a cada execução: nenhum segredo real no CI.
+        run: |
+          echo "JWT_SECRET=$(openssl rand -base64 48)" >> "$GITHUB_ENV"
+          echo "ENCRYPTION_KEY=$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+
+      - name: Cria o banco
+        run: |
+          python - <<'PY'
+          import pyodbc
+          cn = pyodbc.connect(
+              "DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,1433;UID=sa;PWD=Ci_Password_2026!;"
+              "TrustServerCertificate=yes;Encrypt=yes",
+              autocommit=True,
+          )
+          cn.execute("IF DB_ID('pep') IS NULL CREATE DATABASE pep")
+          PY
+
+      - name: Migrations (sobe, desce uma, sobe)
+        run: |
+          alembic upgrade head
+          alembic downgrade -1
+          alembic upgrade head
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Tipos
+        run: mypy app
+
+      - name: Testes
+        run: pytest -q

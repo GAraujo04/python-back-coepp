@@ -13,6 +13,7 @@ sobe um SQL Server e roda todos.
 
 from __future__ import annotations
 
+import os
 import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -36,11 +37,20 @@ def _db_available() -> bool:
         return False
 
 
-pytestmark = pytest.mark.skipif(not _db_available(), reason="SQL Server indisponível")
+_DB = _db_available()
+
+# No CI (REQUIRE_DB=1) banco fora do ar é falha, não "pulado": senão a CI
+# ficaria verde sem ter rodado nenhum teste de integração.
+if not _DB and os.environ.get("REQUIRE_DB") == "1":
+    raise RuntimeError("REQUIRE_DB=1, mas o SQL Server não está acessível — testes de integração não rodariam.")
 
 
 @pytest.fixture
 def db() -> Iterator[Session]:
+    # Skip aqui, e não via `pytestmark`: pytestmark num conftest não se
+    # aplica aos módulos de teste. Todo teste daqui depende desta fixture.
+    if not _DB:
+        pytest.skip("SQL Server indisponível")
     session = SessionLocal()
     try:
         yield session
