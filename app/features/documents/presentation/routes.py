@@ -77,7 +77,7 @@ def review_queue(
     current: CurrentUser = Depends(require_role(["SUPERVISOR", "ADMIN"])),
     repo: SqlAlchemyDocumentRepository = Depends(_get_repo),
 ) -> list[QueueItemOut]:
-    items = repo.list_review_queue(current.sub)
+    items = repo.list_review_queue(current.sub, current.role)
     return [
         QueueItemOut(
             id=i.id,
@@ -132,7 +132,7 @@ def get_review(
     current: CurrentUser = Depends(require_role(["SUPERVISOR", "ADMIN"])),
     repo: SqlAlchemyDocumentRepository = Depends(_get_repo),
 ) -> DocForReviewOut:
-    doc = repo.get_for_review(current.sub, document_id)
+    doc = repo.get_for_review(current.sub, current.role, document_id)
     if not doc:
         raise NotFoundError("Documento não encontrado.")
     return DocForReviewOut(

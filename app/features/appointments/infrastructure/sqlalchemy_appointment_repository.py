@@ -12,7 +12,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ....shared.db.models import Appointment as AppointmentRow
-from ....shared.db.session import with_rls_context
+from ....shared.db.session import get_under_rls, with_rls_context
 from ....shared.errors.app_error import ConflictError
 from ....shared.scheduling.room_conflict import find_room_conflict
 from ..domain.appointment import Appointment, AppointmentStatus
@@ -68,14 +68,14 @@ class SqlAlchemyAppointmentRepository(AppointmentRepository):
 
     def find_by_id(self, ctx: AccessContext, id: str) -> Appointment | None:
         def _do(session: Session) -> Appointment | None:
-            row = session.get(AppointmentRow, id)
+            row = get_under_rls(session, AppointmentRow, id)
             return _to_domain(row) if row else None
 
         return with_rls_context(self._session, ctx.user_id, ctx.role, _do)
 
     def update_status(self, ctx: AccessContext, id: str, status: AppointmentStatus) -> Appointment:
         def _do(session: Session) -> Appointment:
-            row = session.get(AppointmentRow, id)
+            row = get_under_rls(session, AppointmentRow, id)
             if not row:
                 raise LookupError(f"Appointment {id} não encontrado dentro do contexto de RLS.")
             row.status = status

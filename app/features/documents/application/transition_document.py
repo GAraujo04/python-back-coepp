@@ -52,6 +52,12 @@ class TransitionDocument:
 
         to = resolve_transition(doc.status, input.action, input.role)
 
+        # A leitura acima roda como ADMIN (a escrita da transição precisa),
+        # então o vínculo do supervisor é checado aqui: só decide sobre o
+        # documento quem supervisiona o paciente. Admin decide sobre todos.
+        if input.role == "SUPERVISOR" and not self._repo.supervises_patient(input.actor_id, doc.patient_id):
+            raise ForbiddenError("Você não supervisiona este paciente.")
+
         if input.action in AUTHOR_ACTIONS:
             is_author = doc.author_id == input.actor_id or input.actor_id in doc.co_author_ids
             if not is_author:

@@ -15,8 +15,15 @@ from sqlalchemy.orm import Session
 
 from ....shared.crypto.field_encryption import decrypt_field
 from ....shared.crypto.json_field import decrypt_json
-from ....shared.db.models import ClinicalDocument, DocumentApproval, DocumentSignature, ReviewComment, User
-from ....shared.db.session import with_rls_context
+from ....shared.db.models import (
+    Assignment,
+    ClinicalDocument,
+    DocumentApproval,
+    DocumentSignature,
+    ReviewComment,
+    User,
+)
+from ....shared.db.session import get_under_rls, with_rls_context
 from ..domain.document_status import DocStatus
 
 _REVIEW_STATES = ("ENVIADO_PARA_SUPERVISAO", "EM_REVISAO")
@@ -179,7 +186,20 @@ class SqlAlchemyDocumentRepository:
 
         with_rls_context(self._session, actor_id, "ADMIN", _do)
 
-    def list_review_queue(self, actor_id: str) -> list[QueueItem]:
+    def supervises_patient(self, supervisor_id: str, patient_id: str) -> bool:
+        """O supervisor responde por este paciente num vínculo ativo? Mesma
+        condição da RLS de leitura (fn_documents_select)."""
+        found = self._session.scalar(
+            select(Assignment.id).where(
+                Assignment.patient_id == patient_id, Assignment.supervisor_id == supervisor_id, Assignment.active
+            )
+        )
+        return found is not None
+
+    def list_review_queue(self, actor_id: str, role: str) -> list[QueueItem]:
+        # Sob o papel REAL do ator: a RLS limita o supervisor aos pacientes
+        # dos vínculos que ele supervisiona. Antes rodava como ADMIN e
+        # todo supervisor via (e podia aprovar) a fila inteira.
         def _do(session: Session) -> list[QueueItem]:
             rows = session.scalars(
                 select(ClinicalDocument)
@@ -200,7 +220,7 @@ class SqlAlchemyDocumentRepository:
                 for r in rows
             ]
 
-        return with_rls_context(self._session, actor_id, "ADMIN", _do)
+        return with_rls_context(self._session, actor_id, role, _do)
 
     def list_reports(self, actor_id: str, role: str) -> list[ReportItem]:
         """Documentos já enviados (tudo menos RASCUNHO), em ordem de
@@ -232,9 +252,9 @@ class SqlAlchemyDocumentRepository:
 
         return with_rls_context(self._session, actor_id, role, _do)
 
-    def get_for_review(self, actor_id: str, document_id: str) -> DocForReview | None:
+    def get_for_review(self, actor_id: str, role: str, document_id: str) -> DocForReview | None:
         def _do(session: Session) -> DocForReview | None:
-            r = session.get(ClinicalDocument, document_id)
+            r = get_under_rls(session, ClinicalDocument, document_id)
             if not r:
                 return None
             return DocForReview(
@@ -263,4 +283,4 @@ class SqlAlchemyDocumentRepository:
                 ],
             )
 
-        return with_rls_context(self._session, actor_id, "ADMIN", _do)
+        return with_rls_context(self._session, actor_id, role, _do)
