@@ -16,6 +16,7 @@ from ....shared.audit.sql_audit_recorder import SqlAuditRecorder
 from ....shared.auth.jwt_auth import CurrentUser, get_current_user, require_role
 from ....shared.db.session import get_session
 from ....shared.errors.app_error import NotFoundError
+from ....shared.privacy.patient_name import patient_name_for
 from ..application.create_patient import CreatePatient, CreatePatientInput
 from ..infrastructure.sqlalchemy_patient_repository import (
     AccessContext,
@@ -41,11 +42,11 @@ def _get_audit(db: Session = Depends(_get_db)) -> AuditRecorder:
     return SqlAuditRecorder(db)
 
 
-def _serialize_summary(p: PatientSummary) -> PatientSummaryOut:
+def _serialize_summary(p: PatientSummary, role: str) -> PatientSummaryOut:
     return PatientSummaryOut(
         id=p.id,
         code=p.code,
-        full_name=p.full_name,
+        full_name=patient_name_for(role, p.full_name),
         birth_date=p.birth_date,
         is_minor=p.is_minor,
         has_disability=p.has_disability,
@@ -62,7 +63,7 @@ def list_patients(
     current: CurrentUser = Depends(get_current_user), repo: SqlAlchemyPatientRepository = Depends(_get_repo)
 ) -> list[PatientSummaryOut]:
     ctx = AccessContext(user_id=current.sub, role=current.role)
-    return [_serialize_summary(p) for p in repo.list_for_actor(ctx)]
+    return [_serialize_summary(p, current.role) for p in repo.list_for_actor(ctx)]
 
 
 @router.post(
@@ -100,7 +101,7 @@ def create_patient(
             correlation_id=getattr(request.state, "correlation_id", None),
         )
     )
-    return _serialize_summary(patient)
+    return _serialize_summary(patient, current.role)
 
 
 @router.get(

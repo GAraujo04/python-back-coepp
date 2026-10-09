@@ -26,7 +26,7 @@ class DisabilitySummaryOut(CamelModel):
 class PatientSummaryOut(CamelModel):
     id: str
     code: str
-    full_name: str
+    full_name: str | None  # None para o supervisor (shared/privacy/patient_name.py)
     birth_date: str | None
     is_minor: bool
     has_disability: bool

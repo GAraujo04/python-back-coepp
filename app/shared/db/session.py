@@ -20,7 +20,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import Engine, create_engine, select, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from ..config.env import load_env
@@ -91,3 +91,16 @@ def with_rls_context[T](session: Session, user_id: str, role: str, fn: Callable[
         return _set_context_and_run()
     with session.begin():
         return _set_context_and_run()
+
+
+def get_under_rls[M](session: Session, model: type[M], id: str) -> M | None:
+    """Busca por id SEMPRE indo ao banco — para tabelas com RLS.
+
+    `session.get()` devolve o objeto que já estiver no identity map da
+    Session sem emitir SELECT nenhum, ou seja, sem passar pelo FILTER
+    PREDICATE. Se algo antes, na mesma Session, carregou a linha sob outro
+    contexto (ex.: ADMIN), a leitura "como estagiário" a devolveria mesmo
+    sem ele ter acesso. Um SELECT explícito é filtrado pela RLS do contexto
+    atual e devolve None quando ela esconde a linha."""
+    pk = model.id  # type: ignore[attr-defined]  # todos os modelos com RLS têm `id`
+    return session.scalar(select(model).where(pk == id).execution_options(populate_existing=True))

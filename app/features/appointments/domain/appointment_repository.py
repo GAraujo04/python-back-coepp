@@ -46,3 +46,14 @@ class AppointmentRepository(ABC):
 
     @abstractmethod
     def update_status(self, ctx: AccessContext, id: str, status: AppointmentStatus) -> Appointment: ...
+
+    @abstractmethod
+    def cancel(self, ctx: AccessContext, id: str, following: bool) -> int:
+        """Cancela a consulta; com `following`, também as seguintes ainda
+        marcadas do mesmo par paciente↔estagiário. Devolve quantas."""
+        ...
+
+    @abstractmethod
+    def reschedule(self, ctx: AccessContext, id: str, scheduled_at: datetime, room_id: str | None) -> Appointment:
+        """Muda data/hora (e sala). Conflito de sala -> ConflictError."""
+        ...

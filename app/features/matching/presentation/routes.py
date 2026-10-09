@@ -17,6 +17,7 @@ from ....shared.audit.sql_audit_recorder import SqlAuditRecorder
 from ....shared.auth.jwt_auth import CurrentUser, require_role
 from ....shared.db.session import get_session
 from ....shared.http.utc_datetime import to_iso_utc
+from ....shared.privacy.patient_name import patient_name_for
 from ..application.create_manual_match import CreateManualMatch, CreateManualMatchInput
 from ..application.run_matching import RunMatching
 from ..application.suggest_matches import SuggestMatches
@@ -92,7 +93,8 @@ def list_matches(
             scheduled_at=to_iso_utc(m.scheduled_at),
             status=m.status,
             intern_name=m.intern_name,
-            patient_name=m.patient_name,
+            patient_name=patient_name_for(current.role, m.patient_name),
+            patient_code=m.patient_code,
             room_name=m.room_name,
         )
         for m in matches

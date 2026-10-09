@@ -15,7 +15,7 @@ from sqlalchemy.orm import Session
 from ....shared.crypto.json_field import content_digest, decrypt_json, encrypt_json
 from ....shared.db.applock import with_app_lock
 from ....shared.db.models import ClinicalDocument, User
-from ....shared.db.session import with_rls_context
+from ....shared.db.session import get_under_rls, with_rls_context
 from ....shared.errors.app_error import ConflictError, NotFoundError
 from ..domain.screening_content import ScreeningType
 from ..domain.screening_repository import (
@@ -128,7 +128,7 @@ class SqlAlchemyScreeningRepository(ScreeningRepository):
 
     def find_by_id(self, ctx: AccessContext, id: str) -> ScreeningRecord | None:
         def _do(session: Session) -> ScreeningRecord | None:
-            doc = session.get(ClinicalDocument, id)
+            doc = get_under_rls(session, ClinicalDocument, id)
             return _to_record(doc) if doc else None
 
         return with_rls_context(self._session, ctx.user_id, ctx.role, _do)
@@ -138,7 +138,7 @@ class SqlAlchemyScreeningRepository(ScreeningRepository):
     ) -> ScreeningRecord:
         def _do(session: Session) -> ScreeningRecord:
             # Só edita rascunhos (ou os que voltaram para revisão). Concorrência otimista por version.
-            doc = session.get(ClinicalDocument, id)
+            doc = get_under_rls(session, ClinicalDocument, id)
             if not doc or doc.version != expected_version or doc.status not in ("RASCUNHO", "REVISAO_SOLICITADA"):
                 raise ConflictError(
                     "Rascunho desatualizado ou não editável (verifique versão/status).", {"documentId": id}
@@ -157,7 +157,7 @@ class SqlAlchemyScreeningRepository(ScreeningRepository):
             # A regra (só RASCUNHO próprio, ou ADMIN) já foi checada na
             # application; a BLOCK PREDICATE de DELETE é o backstop final
             # (defense in depth).
-            doc = session.get(ClinicalDocument, id)
+            doc = get_under_rls(session, ClinicalDocument, id)
             if not doc:
                 raise NotFoundError("Triagem não encontrada.")
             session.delete(doc)
