@@ -78,6 +78,34 @@ class MatchSuggestionOut(CamelModel):
     scheduled_at: str
 
 
+class WindowOut(CamelModel):
+    weekday: int  # 0=domingo .. 6=sábado
+    start_time: str
+    end_time: str
+
+
+class UnmatchedPatientOut(CamelModel):
+    id: str
+    code: str
+    is_minor: bool
+    has_disability: bool
+    windows: list[WindowOut]
+    registered_at: str
+    no_match_since: str | None
+
+
+class UnmatchedInternOut(CamelModel):
+    id: str
+    name: str
+    ra: str | None
+    windows: list[WindowOut]
+
+
+class UnmatchedOut(CamelModel):
+    patients: list[UnmatchedPatientOut]
+    interns: list[UnmatchedInternOut]
+
+
 class PendingMatchRequestOut(CamelModel):
     id: str
     patient_code: str

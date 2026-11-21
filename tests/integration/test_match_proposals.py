@@ -75,3 +75,39 @@ def test_nao_salva_se_o_paciente_ja_ganhou_vinculo(db: Session, world: World) ->
         ConfirmMatchProposal(repo, NoAudit()).execute(
             ConfirmProposalInput(world.admin.id, proposal_id, _future().isoformat() + "Z", None)
         )
+
+
+def test_sem_par_lista_paciente_e_estagiario_livres(db: Session, world: World) -> None:
+    repo = SqlAlchemyMatchingRepository(db)
+    livre = make_patient(db)
+    patients, interns = repo.unmatched()
+    ids_pac = {p.id for p in patients}
+    ids_est = {i.id for i in interns}
+    assert livre.id in ids_pac
+    assert world.patient.id not in ids_pac  # tem vínculo ativo
+    assert world.other_intern.id in ids_est  # sem nenhum paciente
+    assert world.intern.id not in ids_est  # já atende o paciente do mundo
+
+
+def test_alerta_sem_horario_nao_duplica_e_some_ao_parear(db: Session, world: World) -> None:
+    from app.shared.db.models import PendingMatchRequest
+
+    repo = SqlAlchemyMatchingRepository(db)
+    livre = make_patient(db)
+    repo.create_pending_match_request(livre.id, None)
+    repo.create_pending_match_request(livre.id, None)  # segunda rodada
+    abertos = db.scalars(
+        select(PendingMatchRequest).where(
+            PendingMatchRequest.patient_id == livre.id, PendingMatchRequest.status == "pendente_ajuste_manual"
+        )
+    ).all()
+    assert len(abertos) == 1
+    [sem_par] = [p for p in repo.unmatched()[0] if p.id == livre.id]
+    assert sem_par.no_match_since is not None
+
+    repo.create_match(
+        world.admin.id,
+        NewMatch(patient_id=livre.id, intern_id=world.other_intern.id, room_id=None, scheduled_at=_future()),
+    )
+    db.refresh(abertos[0])
+    assert abertos[0].status == "resolvido"

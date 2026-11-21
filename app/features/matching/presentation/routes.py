@@ -23,6 +23,7 @@ from ..application.create_manual_match import CreateManualMatch, CreateManualMat
 from ..application.match_proposals import ConfirmMatchProposal, ConfirmProposalInput, DiscardMatchProposal
 from ..application.run_matching import RunMatching
 from ..application.suggest_matches import SuggestMatches
+from ..domain.find_candidates import WindowSlot
 from ..infrastructure.sqlalchemy_matching_repository import SqlAlchemyMatchingRepository
 from .schemas import (
     ConfirmMatchProposalRequest,
@@ -35,7 +36,11 @@ from .schemas import (
     MatchViewOut,
     PendingMatchRequestOut,
     RunMatchingResponse,
+    UnmatchedInternOut,
+    UnmatchedOut,
+    UnmatchedPatientOut,
     WarningOut,
+    WindowOut,
 )
 
 router = APIRouter(prefix="/api", tags=["matching"])
@@ -144,6 +149,36 @@ def discard_proposal(
     audit: AuditRecorder = Depends(_get_audit),
 ) -> None:
     DiscardMatchProposal(repo, audit).execute(current.sub, proposal_id, getattr(request.state, "correlation_id", None))
+
+
+def _windows(ws: list[WindowSlot]) -> list[WindowOut]:
+    return [WindowOut(weekday=w.weekday, start_time=w.start_time, end_time=w.end_time) for w in ws]
+
+
+@router.get(
+    "/matching/unmatched",
+    response_model=UnmatchedOut,
+    summary="Pacientes e estagiários sem par, com a disponibilidade, para pareamento manual (Administrativo)",
+)
+def unmatched(
+    current: CurrentUser = Depends(require_role(["ADMIN"])), repo: SqlAlchemyMatchingRepository = Depends(_get_repo)
+) -> UnmatchedOut:
+    patients, interns = repo.unmatched()
+    return UnmatchedOut(
+        patients=[
+            UnmatchedPatientOut(
+                id=p.id,
+                code=p.code,
+                is_minor=p.is_minor,
+                has_disability=p.has_disability,
+                windows=_windows(p.windows),
+                registered_at=to_iso_utc(p.registered_at),
+                no_match_since=to_iso_utc(p.no_match_since) if p.no_match_since else None,
+            )
+            for p in patients
+        ],
+        interns=[UnmatchedInternOut(id=i.id, name=i.name, ra=i.ra, windows=_windows(i.windows)) for i in interns],
+    )
 
 
 @router.get(
