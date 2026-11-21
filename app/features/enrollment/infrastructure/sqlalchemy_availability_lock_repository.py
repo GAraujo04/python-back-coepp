@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from ....shared.db.models import Assignment, User
 from ..application.availability_lock import (
+    AvailabilityChange,
     AvailabilityLockRepository,
     AvailabilityLockState,
     PendingAvailabilityRequest,
@@ -111,4 +112,24 @@ class SqlAlchemyAvailabilityLockRepository(AvailabilityLockRepository):
                 else None,
             )
             for u in self._session.scalars(stmt).all()
+        ]
+
+    def list_changes_since(self, since: datetime) -> list[AvailabilityChange]:
+        """Estagiários que alteraram a disponibilidade a partir de `since`,
+        mais recente primeiro, com a disponibilidade atual (a nova)."""
+        rows = self._session.scalars(
+            select(User)
+            .where(User.role == "INTERN", User.availability_changed_at >= since)
+            .order_by(User.availability_changed_at.desc())
+        ).all()
+        return [
+            AvailabilityChange(
+                intern_id=u.id,
+                intern_name=u.full_name,
+                ra=u.ra,
+                changed_at=u.availability_changed_at,
+                windows=sorted((w.weekday, w.start_time, w.end_time) for w in u.availability_windows),
+            )
+            for u in rows
+            if u.availability_changed_at is not None
         ]

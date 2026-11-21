@@ -11,6 +11,7 @@ repositório; mantido fiel.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -250,6 +251,10 @@ class SqlAlchemyEnrollmentRepository:
                 for w in windows
             ]
         )
+        # Marca a alteração para o administrativo (aviso + lista na aba Usuários).
+        user = self._session.get(User, user_id)
+        if user:
+            user.availability_changed_at = datetime.now(UTC).replace(tzinfo=None)
         self._session.flush()
 
     def list_options(self) -> RegistrationOptions:

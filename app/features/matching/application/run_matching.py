@@ -1,9 +1,14 @@
-"""Motor de pareamento (item 2 + item 6): casa a disponibilidade
+"""Motor de pareamento (item 2 + item 6): PROPÕE pares casando a disponibilidade
 recorrente de um paciente com a de um estagiário (mesmo dia da semana,
 sobreposição >= duração da sessão), calcula a data/hora concreta da
-primeira consulta e só confirma se houver sala livre nesse horário. No
-máximo um pareamento por paciente por execução; pacientes com vínculo
-ativo não entram como candidatos. O supervisor é atribuído depois.
+primeira consulta e só propõe se houver sala livre nesse horário. No
+máximo uma proposta por paciente; pacientes com vínculo ativo ou proposta
+em aberto não entram como candidatos, e os horários já propostos ficam
+reservados.
+
+A rodada não cria vínculo nem consulta: grava MatchProposal, que o
+administrativo salva (ConfirmMatchProposal — aí nasce o vínculo com a
+agenda do semestre) ou cancela (DiscardMatchProposal).
 
 Fallback por aproximação (item 5): paciente sem nenhum match exato nesta
 rodada não é mais simplesmente ignorado — grava um PendingMatchRequest
@@ -34,7 +39,7 @@ from ..infrastructure.sqlalchemy_matching_repository import (
 
 @dataclass
 class MatchResult:
-    appointment_id: str
+    proposal_id: str
     intern_id: str
     patient_id: str
     room_id: str | None
@@ -58,12 +63,11 @@ class RunMatching:
         patients = self._repo.candidate_patients()
         interns = self._repo.interns_with_windows()
         rooms = self._repo.active_rooms()
-        candidates = find_all_candidates(patients, interns, rooms, now)
+        candidates = find_all_candidates(patients, interns, rooms, now, self._repo.reservations())
 
         results: list[MatchResult] = []
         for candidate in candidates:
-            appointment_id = self._repo.create_match(
-                actor_id,
+            proposal_id = self._repo.create_proposal(
                 NewMatch(
                     patient_id=candidate.patient_id,
                     intern_id=candidate.intern_id,
@@ -73,7 +77,7 @@ class RunMatching:
             )
             results.append(
                 MatchResult(
-                    appointment_id=appointment_id,
+                    proposal_id=proposal_id,
                     intern_id=candidate.intern_id,
                     patient_id=candidate.patient_id,
                     room_id=candidate.room_id,
@@ -101,7 +105,7 @@ class RunMatching:
                 action="CREATE",
                 resource_type="matching",
                 correlation_id=correlation_id,
-                diff={"matched": len(results), "fallbacks": fallbacks, "source": "automatic"},
+                diff={"proposed": len(results), "fallbacks": fallbacks, "source": "automatic"},
             )
         )
 

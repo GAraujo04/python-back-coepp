@@ -1,5 +1,6 @@
-"""Rotas do pareamento: executar (Admin), visualizar (Admin/Supervisor),
-sugerir e criar manualmente (Admin).
+"""Rotas do pareamento: executar — gera propostas —, salvar ou cancelar
+proposta (Admin), visualizar consultas (Admin/Supervisor), sugerir e criar
+manualmente (Admin).
 
 Porta features/matching/presentation/routes.ts.
 """
@@ -19,12 +20,16 @@ from ....shared.db.session import get_session
 from ....shared.http.utc_datetime import to_iso_utc
 from ....shared.privacy.patient_name import patient_name_for
 from ..application.create_manual_match import CreateManualMatch, CreateManualMatchInput
+from ..application.match_proposals import ConfirmMatchProposal, ConfirmProposalInput, DiscardMatchProposal
 from ..application.run_matching import RunMatching
 from ..application.suggest_matches import SuggestMatches
 from ..infrastructure.sqlalchemy_matching_repository import SqlAlchemyMatchingRepository
 from .schemas import (
+    ConfirmMatchProposalRequest,
+    ConfirmMatchProposalResponse,
     CreateManualMatchRequest,
     CreateManualMatchResponse,
+    MatchProposalOut,
     MatchResultOut,
     MatchSuggestionOut,
     MatchViewOut,
@@ -52,7 +57,7 @@ def _get_audit(db: Session = Depends(_get_db)) -> AuditRecorder:
 @router.post(
     "/matching/run",
     response_model=RunMatchingResponse,
-    summary="Executa o pareamento por disponibilidade (Administrativo)",
+    summary="Executa o pareamento por disponibilidade e grava as propostas (Administrativo)",
 )
 def run_matching(
     request: Request,
@@ -66,7 +71,7 @@ def run_matching(
         matched=len(results),
         results=[
             MatchResultOut(
-                appointment_id=r.appointment_id,
+                proposal_id=r.proposal_id,
                 intern_id=r.intern_id,
                 patient_id=r.patient_id,
                 room_id=r.room_id,
@@ -75,6 +80,70 @@ def run_matching(
             for r in results
         ],
     )
+
+
+@router.get(
+    "/matching/proposals",
+    response_model=list[MatchProposalOut],
+    summary="Propostas de pareamento aguardando salvar ou cancelar (Administrativo)",
+)
+def list_proposals(
+    current: CurrentUser = Depends(require_role(["ADMIN"])), repo: SqlAlchemyMatchingRepository = Depends(_get_repo)
+) -> list[MatchProposalOut]:
+    return [
+        MatchProposalOut(
+            id=p.id,
+            patient_id=p.patient_id,
+            patient_code=p.patient_code,
+            intern_id=p.intern_id,
+            intern_name=p.intern_name,
+            room_id=p.room_id,
+            room_name=p.room_name,
+            scheduled_at=to_iso_utc(p.scheduled_at),
+        )
+        for p in repo.list_proposals()
+    ]
+
+
+@router.post(
+    "/matching/proposals/{proposal_id}/confirm",
+    status_code=201,
+    response_model=ConfirmMatchProposalResponse,
+    summary="Salva a proposta: cria o vínculo e a agenda semanal do período (Administrativo)",
+)
+def confirm_proposal(
+    proposal_id: str,
+    body: ConfirmMatchProposalRequest,
+    request: Request,
+    current: CurrentUser = Depends(require_role(["ADMIN"])),
+    repo: SqlAlchemyMatchingRepository = Depends(_get_repo),
+    audit: AuditRecorder = Depends(_get_audit),
+) -> ConfirmMatchProposalResponse:
+    appointment_id = ConfirmMatchProposal(repo, audit).execute(
+        ConfirmProposalInput(
+            actor_id=current.sub,
+            proposal_id=proposal_id,
+            scheduled_at=body.scheduled_at,
+            room_id=body.room_id,
+            correlation_id=getattr(request.state, "correlation_id", None),
+        )
+    )
+    return ConfirmMatchProposalResponse(appointment_id=appointment_id)
+
+
+@router.delete(
+    "/matching/proposals/{proposal_id}",
+    status_code=204,
+    summary="Cancela a proposta sem salvar — não deixa vínculo nem consulta (Administrativo)",
+)
+def discard_proposal(
+    proposal_id: str,
+    request: Request,
+    current: CurrentUser = Depends(require_role(["ADMIN"])),
+    repo: SqlAlchemyMatchingRepository = Depends(_get_repo),
+    audit: AuditRecorder = Depends(_get_audit),
+) -> None:
+    DiscardMatchProposal(repo, audit).execute(current.sub, proposal_id, getattr(request.state, "correlation_id", None))
 
 
 @router.get(
@@ -92,6 +161,7 @@ def list_matches(
             appointment_id=m.appointment_id,
             scheduled_at=to_iso_utc(m.scheduled_at),
             status=m.status,
+            intern_id=m.intern_id,
             intern_name=m.intern_name,
             patient_name=patient_name_for(current.role, m.patient_name),
             patient_code=m.patient_code,
@@ -113,7 +183,7 @@ def suggestions(
     return [
         MatchSuggestionOut(
             patient_id=s.patient_id,
-            patient_name=s.patient_name,
+            patient_code=s.patient_code,
             intern_id=s.intern_id,
             intern_name=s.intern_name,
             room_id=s.room_id,
@@ -136,7 +206,7 @@ def pending_requests(
     return [
         PendingMatchRequestOut(
             id=r.id,
-            patient_name=r.patient_name,
+            patient_code=r.patient_code,
             suggested_intern_name=r.suggested_intern_name,
             suggested_at=to_iso_utc(r.suggested_at) if r.suggested_at else None,
             status=r.status,

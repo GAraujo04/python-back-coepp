@@ -56,7 +56,7 @@ def list_assignments(
     return [
         AssignmentViewOut(
             id=a.id,
-            patient_name=a.patient_name,
+            patient_code=a.patient_code,
             intern_id=a.intern_id,
             intern_name=a.intern_name,
             supervisor_id=a.supervisor_id,

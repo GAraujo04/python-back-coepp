@@ -36,11 +36,7 @@ class SqlAlchemyNotificationSource:
         if role == "SUPERVISOR":
             return self._review_queue(user_id, role) + self._availability_requests(user_id, now)
         if role == "ADMIN":
-            return (
-                self._availability_requests(None, now)
-                + self._pending_matches()
-                + self._assignments_without_supervisor()
-            )
+            return self._pending_matches() + self._assignments_without_supervisor() + self._availability_changes(now)
         if role == "INTERN":
             return self._intern_documents(user_id, now) + self._availability_unlocked(user_id, now)
         return []
@@ -54,7 +50,7 @@ class SqlAlchemyNotificationSource:
         oldest = min(i.updated_at for i in queue)
         return [Notification(kind="REVIEW_QUEUE", actionable=True, at=oldest, count=len(queue))]
 
-    def _availability_requests(self, supervisor_id: str | None, now: datetime) -> list[Notification]:
+    def _availability_requests(self, supervisor_id: str, now: datetime) -> list[Notification]:
         # Só os pedidos ainda sem decisão; liberação em vigor não é pendência
         # do supervisor (é do estagiário).
         rows = SqlAlchemyAvailabilityLockRepository(self._session).list_open(supervisor_id, now)
@@ -79,6 +75,15 @@ class SqlAlchemyNotificationSource:
             select(func.count(Assignment.id)).where(Assignment.active, Assignment.supervisor_id.is_(None))
         )
         return [Notification(kind="ASSIGNMENTS_WITHOUT_SUPERVISOR", actionable=True, count=count)] if count else []
+
+    def _availability_changes(self, now: datetime) -> list[Notification]:
+        # Informativo: a decisão foi do supervisor; o administrativo só
+        # precisa saber que a disponibilidade mudou (e ver a nova).
+        changes = SqlAlchemyAvailabilityLockRepository(self._session).list_changes_since(now - INFO_WINDOW)
+        if not changes:
+            return []
+        latest = max(c.changed_at for c in changes)
+        return [Notification(kind="AVAILABILITY_CHANGED", actionable=False, at=latest, count=len(changes))]
 
     # --- estagiário -------------------------------------------------------
 

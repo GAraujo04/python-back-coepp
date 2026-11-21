@@ -99,8 +99,8 @@
             "title": "Internname",
             "type": "string"
           },
-          "patientName": {
-            "title": "Patientname",
+          "patientCode": {
+            "title": "Patientcode",
             "type": "string"
           },
           "supervisorId": {
@@ -128,7 +128,7 @@
         },
         "required": [
           "id",
-          "patientName",
+          "patientCode",
           "internId",
           "internName",
           "supervisorId",
@@ -193,6 +193,49 @@
           "outcome"
         ],
         "title": "AttendanceRequest",
+        "type": "object"
+      },
+      "AvailabilityChangeOut": {
+        "properties": {
+          "changedAt": {
+            "title": "Changedat",
+            "type": "string"
+          },
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "internName": {
+            "title": "Internname",
+            "type": "string"
+          },
+          "ra": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityWindowOut"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "internId",
+          "internName",
+          "ra",
+          "changedAt",
+          "windows"
+        ],
+        "title": "AvailabilityChangeOut",
         "type": "object"
       },
       "AvailabilityChangeRequestIn": {
@@ -494,6 +537,43 @@
           "acceptedTermVersion"
         ],
         "title": "CompleteInternProfileRequest",
+        "type": "object"
+      },
+      "ConfirmMatchProposalRequest": {
+        "properties": {
+          "roomId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomid"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scheduledAt"
+        ],
+        "title": "ConfirmMatchProposalRequest",
+        "type": "object"
+      },
+      "ConfirmMatchProposalResponse": {
+        "properties": {
+          "appointmentId": {
+            "title": "Appointmentid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "appointmentId"
+        ],
+        "title": "ConfirmMatchProposalResponse",
         "type": "object"
       },
       "CreateDisciplinaRequest": {
@@ -1108,18 +1188,80 @@
         "title": "LoginRequest",
         "type": "object"
       },
-      "MatchResultOut": {
+      "MatchProposalOut": {
         "properties": {
-          "appointmentId": {
-            "title": "Appointmentid",
+          "id": {
+            "title": "Id",
             "type": "string"
           },
           "internId": {
             "title": "Internid",
             "type": "string"
           },
+          "internName": {
+            "title": "Internname",
+            "type": "string"
+          },
+          "patientCode": {
+            "title": "Patientcode",
+            "type": "string"
+          },
           "patientId": {
             "title": "Patientid",
+            "type": "string"
+          },
+          "roomId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomid"
+          },
+          "roomName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Roomname"
+          },
+          "scheduledAt": {
+            "title": "Scheduledat",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "patientId",
+          "patientCode",
+          "internId",
+          "internName",
+          "roomId",
+          "roomName",
+          "scheduledAt"
+        ],
+        "title": "MatchProposalOut",
+        "type": "object"
+      },
+      "MatchResultOut": {
+        "properties": {
+          "internId": {
+            "title": "Internid",
+            "type": "string"
+          },
+          "patientId": {
+            "title": "Patientid",
+            "type": "string"
+          },
+          "proposalId": {
+            "title": "Proposalid",
             "type": "string"
           },
           "roomId": {
@@ -1139,7 +1281,7 @@
           }
         },
         "required": [
-          "appointmentId",
+          "proposalId",
           "internId",
           "patientId",
           "roomId",
@@ -1158,12 +1300,12 @@
             "title": "Internname",
             "type": "string"
           },
-          "patientId": {
-            "title": "Patientid",
+          "patientCode": {
+            "title": "Patientcode",
             "type": "string"
           },
-          "patientName": {
-            "title": "Patientname",
+          "patientId": {
+            "title": "Patientid",
             "type": "string"
           },
           "roomId": {
@@ -1181,7 +1323,7 @@
         },
         "required": [
           "patientId",
-          "patientName",
+          "patientCode",
           "internId",
           "internName",
           "roomId",
@@ -1195,6 +1337,10 @@
         "properties": {
           "appointmentId": {
             "title": "Appointmentid",
+            "type": "string"
+          },
+          "internId": {
+            "title": "Internid",
             "type": "string"
           },
           "internName": {
@@ -1240,6 +1386,7 @@
           "appointmentId",
           "scheduledAt",
           "status",
+          "internId",
           "internName",
           "patientName",
           "patientCode",
@@ -1295,6 +1442,7 @@
             "enum": [
               "REVIEW_QUEUE",
               "AVAILABILITY_REQUESTS",
+              "AVAILABILITY_CHANGED",
               "PENDING_MATCHES",
               "ASSIGNMENTS_WITHOUT_SUPERVISOR",
               "CHANGES_REQUESTED",
@@ -1549,8 +1697,8 @@
             "title": "Id",
             "type": "string"
           },
-          "patientName": {
-            "title": "Patientname",
+          "patientCode": {
+            "title": "Patientcode",
             "type": "string"
           },
           "status": {
@@ -1582,7 +1730,7 @@
         },
         "required": [
           "id",
-          "patientName",
+          "patientCode",
           "suggestedInternName",
           "suggestedAt",
           "status",
@@ -2240,6 +2388,30 @@
           "results"
         ],
         "title": "RunMatchingResponse",
+        "type": "object"
+      },
+      "SavedAttendancePeriodOut": {
+        "properties": {
+          "endDate": {
+            "format": "date",
+            "title": "Enddate",
+            "type": "string"
+          },
+          "series": {
+            "$ref": "#/components/schemas/SeriesResultOut"
+          },
+          "startDate": {
+            "format": "date",
+            "title": "Startdate",
+            "type": "string"
+          }
+        },
+        "required": [
+          "startDate",
+          "endDate",
+          "series"
+        ],
+        "title": "SavedAttendancePeriodOut",
         "type": "object"
       },
       "ScheduleRequest": {
@@ -3358,6 +3530,36 @@
         ]
       }
     },
+    "/api/availability-changes": {
+      "get": {
+        "operationId": "list_changes_api_availability_changes_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AvailabilityChangeOut"
+                  },
+                  "title": "Response List Changes Api Availability Changes Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Alterações de disponibilidade dos últimos 30 dias, com a nova disponibilidade (Administrativo)",
+        "tags": [
+          "availability-lock"
+        ]
+      }
+    },
     "/api/availability-requests": {
       "get": {
         "operationId": "list_requests_api_availability_requests_get",
@@ -3382,7 +3584,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Pedidos de mudança de disponibilidade e liberações em vigor (Supervisor: seus estagiários; Admin: todos)",
+        "summary": "Pedidos de mudança de disponibilidade e liberações em vigor dos estagiários do supervisor",
         "tags": [
           "availability-lock"
         ]
@@ -4038,6 +4240,133 @@
         ]
       }
     },
+    "/api/matching/proposals": {
+      "get": {
+        "operationId": "list_proposals_api_matching_proposals_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MatchProposalOut"
+                  },
+                  "title": "Response List Proposals Api Matching Proposals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Propostas de pareamento aguardando salvar ou cancelar (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/matching/proposals/{proposal_id}": {
+      "delete": {
+        "operationId": "discard_proposal_api_matching_proposals__proposal_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Cancela a proposta sem salvar — não deixa vínculo nem consulta (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/matching/proposals/{proposal_id}/confirm": {
+      "post": {
+        "operationId": "confirm_proposal_api_matching_proposals__proposal_id__confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "proposal_id",
+            "required": true,
+            "schema": {
+              "title": "Proposal Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmMatchProposalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmMatchProposalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Salva a proposta: cria o vínculo e a agenda semanal do período (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
     "/api/matching/run": {
       "post": {
         "operationId": "run_matching_api_matching_run_post",
@@ -4058,7 +4387,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Executa o pareamento por disponibilidade (Administrativo)",
+        "summary": "Executa o pareamento por disponibilidade e grava as propostas (Administrativo)",
         "tags": [
           "matching"
         ]
@@ -4812,7 +5141,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AttendancePeriodOut"
+                  "$ref": "#/components/schemas/SavedAttendancePeriodOut"
                 }
               }
             },
@@ -4834,7 +5163,7 @@
             "HTTPBearer": []
           }
         ],
-        "summary": "Define início e fim dos atendimentos do ciclo — Administrativo",
+        "summary": "Define início e fim dos atendimentos e completa a agenda dos pares ativos — Administrativo",
         "tags": [
           "attendance-period"
         ]

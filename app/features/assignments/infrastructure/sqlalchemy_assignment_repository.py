@@ -14,7 +14,6 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ....shared.crypto.field_encryption import decrypt_field
 from ....shared.db.models import Appointment, Assignment
 from ....shared.db.session import with_rls_context
 from ....shared.errors.app_error import NotFoundError
@@ -23,7 +22,9 @@ from ....shared.errors.app_error import NotFoundError
 @dataclass
 class AssignmentView:
     id: str
-    patient_name: str
+    # Código, não nome: a tela de vínculos é gestão de agenda e não precisa
+    # identificar o paciente (minimização — o nome fica no prontuário).
+    patient_code: str
     intern_id: str
     intern_name: str
     supervisor_id: str | None
@@ -42,7 +43,7 @@ class SqlAlchemyAssignmentRepository:
         return [
             AssignmentView(
                 id=r.id,
-                patient_name=decrypt_field(r.patient.full_name_enc),
+                patient_code=r.patient.code,
                 intern_id=r.intern_id,
                 intern_name=r.intern.full_name,
                 supervisor_id=r.supervisor_id,

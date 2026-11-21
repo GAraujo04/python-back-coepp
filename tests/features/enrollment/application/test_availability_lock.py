@@ -1,4 +1,4 @@
-"""Trava de disponibilidade: travada por padrão, liberada pelo supervisor
+"""Trava de disponibilidade: travada por padrão, liberada só pelo supervisor
 responsável, gasta no primeiro salvamento."""
 
 from __future__ import annotations
@@ -116,17 +116,26 @@ def test_formulario_invalido_nao_gasta_a_liberacao() -> None:
     assert len(enrollment.saved) == 1
 
 
-def test_so_o_supervisor_responsavel_ou_admin_liberam() -> None:
+def test_so_o_supervisor_responsavel_libera() -> None:
     lock = FakeLockRepo()
     with pytest.raises(ForbiddenError):
         GrantAvailabilityUnlock(lock, FakeAudit()).execute(OTHER_SUPERVISOR, INTERN)
-    GrantAvailabilityUnlock(lock, FakeAudit()).execute(ADMIN, INTERN)
+    GrantAvailabilityUnlock(lock, FakeAudit()).execute(SUPERVISOR, INTERN)
     assert lock.state.unlocked_until is not None
+
+
+def test_administrativo_nao_libera_nem_revoga() -> None:
+    # O administrativo só é avisado da alteração; a decisão é do supervisor.
+    lock = FakeLockRepo()
+    with pytest.raises(ForbiddenError):
+        GrantAvailabilityUnlock(lock, FakeAudit()).execute(ADMIN, INTERN)
+    with pytest.raises(ForbiddenError):
+        RevokeAvailabilityUnlock(lock, FakeAudit()).execute(ADMIN, INTERN)
 
 
 def test_estagiario_inexistente() -> None:
     with pytest.raises(NotFoundError):
-        GrantAvailabilityUnlock(FakeLockRepo(), FakeAudit()).execute(ADMIN, "nao-existe")
+        GrantAvailabilityUnlock(FakeLockRepo(), FakeAudit()).execute(SUPERVISOR, "nao-existe")
 
 
 def test_prazo_fora_dos_limites() -> None:

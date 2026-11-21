@@ -23,7 +23,7 @@ class WarningOut(CamelModel):
 
 
 class MatchResultOut(CamelModel):
-    appointment_id: str
+    proposal_id: str
     intern_id: str
     patient_id: str
     room_id: str | None
@@ -31,14 +31,37 @@ class MatchResultOut(CamelModel):
 
 
 class RunMatchingResponse(CamelModel):
+    # Propostas criadas nesta rodada (aguardam o administrativo salvar).
     matched: int
     results: list[MatchResultOut]
+
+
+class MatchProposalOut(CamelModel):
+    id: str
+    patient_id: str
+    patient_code: str
+    intern_id: str
+    intern_name: str
+    room_id: str | None
+    room_name: str | None
+    scheduled_at: str
+
+
+class ConfirmMatchProposalRequest(CamelModel):
+    scheduled_at: str
+    room_id: str | None = None
+
+
+class ConfirmMatchProposalResponse(CamelModel):
+    appointment_id: str
 
 
 class MatchViewOut(CamelModel):
     appointment_id: str
     scheduled_at: str
     status: str
+    # Com patient_code, identifica o par: a tela agrupa as consultas da série por ele.
+    intern_id: str
     intern_name: str
     patient_name: str | None  # None para o supervisor
     patient_code: str
@@ -47,7 +70,7 @@ class MatchViewOut(CamelModel):
 
 class MatchSuggestionOut(CamelModel):
     patient_id: str
-    patient_name: str
+    patient_code: str
     intern_id: str
     intern_name: str
     room_id: str
@@ -57,7 +80,7 @@ class MatchSuggestionOut(CamelModel):
 
 class PendingMatchRequestOut(CamelModel):
     id: str
-    patient_name: str
+    patient_code: str
     suggested_intern_name: str | None
     suggested_at: str | None
     status: str

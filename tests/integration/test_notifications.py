@@ -58,3 +58,16 @@ def test_admin_ve_vinculo_sem_supervisor(db: Session, world: World) -> None:
     db.add(Assignment(patient_id=world.patient.id, intern_id=world.other_intern.id, supervisor_id=None))
     db.flush()
     assert _kinds(db, world.admin.id, "ADMIN")["ASSIGNMENTS_WITHOUT_SUPERVISOR"] == before + 1
+
+
+def test_admin_e_avisado_da_disponibilidade_alterada(db: Session, world: World) -> None:
+    from app.features.enrollment.infrastructure.sqlalchemy_enrollment_repository import SqlAlchemyEnrollmentRepository
+    from app.shared.scheduling.availability_window import AvailabilityWindowInput
+
+    before = _kinds(db, world.admin.id, "ADMIN").get("AVAILABILITY_CHANGED", 0)
+    SqlAlchemyEnrollmentRepository(db).update_availability_windows(
+        world.intern.id, [AvailabilityWindowInput(weekday=2, start_time="09:00", end_time="12:00")]
+    )
+    assert _kinds(db, world.admin.id, "ADMIN")["AVAILABILITY_CHANGED"] == before + 1
+    # Decidir é do supervisor: o administrativo não recebe mais os pedidos.
+    assert "AVAILABILITY_REQUESTS" not in _kinds(db, world.admin.id, "ADMIN")

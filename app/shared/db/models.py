@@ -71,6 +71,8 @@ class User(Base):
     availability_unlocked_until: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     availability_change_requested_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     availability_change_reason: Mapped[str | None] = mapped_column(String, default=None)
+    # Última alteração da disponibilidade depois do cadastro (migration 0008).
+    availability_changed_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     # Avisos internos (migration 0007): informativos depois disto já foram vistos.
     notifications_seen_at: Mapped[datetime | None] = mapped_column(DateTime, default=None)
     created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
@@ -319,6 +321,28 @@ class PendingMatchRequest(Base):
 
     patient: Mapped[Patient] = relationship(Patient, lazy="joined")
     suggested_intern: Mapped[User | None] = relationship(User, lazy="joined")
+
+
+class MatchProposal(Base):
+    """Par proposto pelo pareamento automático, aguardando o administrativo
+    salvar (vira vínculo + agenda) ou cancelar (é apagado). Migration 0009."""
+
+    __tablename__ = "match_proposals"
+
+    id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), primary_key=True, default=_new_uuid)
+    patient_id: Mapped[str] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("patients.id"), name="patient_id", unique=True
+    )
+    intern_id: Mapped[str] = mapped_column(UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("users.id"), name="intern_id")
+    room_id: Mapped[str | None] = mapped_column(
+        UNIQUEIDENTIFIER(as_uuid=False), ForeignKey("rooms.id"), name="room_id", default=None
+    )
+    scheduled_at: Mapped[datetime] = mapped_column(DateTime, name="scheduled_at")
+    created_at: Mapped[datetime] = mapped_column(DateTime, name="created_at", server_default=func.now())
+
+    patient: Mapped[Patient] = relationship(Patient, lazy="joined")
+    intern: Mapped[User] = relationship(User, lazy="joined")
+    room: Mapped[Room | None] = relationship(Room, lazy="joined")
 
 
 class DocumentApproval(Base):
