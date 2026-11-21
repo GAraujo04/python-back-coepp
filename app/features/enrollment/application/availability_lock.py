@@ -5,8 +5,10 @@ no meio do semestre desfaz horários já combinados com pacientes. Por isso:
 
 1. Ela fica TRAVADA por padrão.
 2. O estagiário pede a mudança, com justificativa (RequestAvailabilityChange).
-3. O supervisor responsável por ele — ou o administrativo — libera por um
-   prazo (GrantAvailabilityUnlock) ou recusa/revoga (RevokeAvailabilityUnlock).
+3. O supervisor responsável por ele libera por um prazo
+   (GrantAvailabilityUnlock) ou recusa/revoga (RevokeAvailabilityUnlock).
+   O administrativo não decide: só é avisado da alteração já feita e vê a
+   nova disponibilidade (users.availability_changed_at), para o pareamento.
 4. A liberação vale para UM salvamento: ao gravar a nova disponibilidade a
    edição volta a travar (UpdateAvailabilityWindows chama `consume_unlock`).
    Sem isso, uma liberação de 48h viraria 48h de edição livre.
@@ -85,8 +87,18 @@ class AvailabilityLockRepository(ABC):
     @abstractmethod
     def list_open(self, supervisor_id: str | None, now: datetime) -> list[PendingAvailabilityRequest]:
         """Pedidos pendentes e liberações em vigor. `supervisor_id` None =
-        todos (administrativo); senão, só os estagiários pelos quais ele
-        responde."""
+        todos; senão, só os estagiários pelos quais ele responde."""
+
+
+@dataclass
+class AvailabilityChange:
+    """Alteração já gravada — o que o administrativo vê."""
+
+    intern_id: str
+    intern_name: str
+    ra: str | None
+    changed_at: datetime
+    windows: list[tuple[int, str, str]]  # (weekday, start, end)
 
 
 @dataclass
@@ -98,8 +110,6 @@ class Actor:
 def _assert_can_manage(repo: AvailabilityLockRepository, actor: Actor, intern_id: str) -> None:
     if repo.get_state(intern_id) is None:
         raise NotFoundError("Estagiário não encontrado.", {"internId": intern_id})
-    if actor.role == "ADMIN":
-        return
     if actor.role == "SUPERVISOR" and repo.is_responsible(actor.user_id, intern_id):
         return
     raise ForbiddenError("Só o supervisor responsável pelo estagiário pode liberar a disponibilidade dele.")

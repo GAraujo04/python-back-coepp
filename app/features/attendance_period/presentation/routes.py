@@ -36,6 +36,11 @@ class SeriesResultOut(CamelModel):
     pairs_without_anchor: int
 
 
+class SavedAttendancePeriodOut(AttendancePeriodOut):
+    # O que salvar o período agendou nos pares que já existiam.
+    series: SeriesResultOut
+
+
 def _get_db() -> Iterator[Session]:
     with get_session() as session:
         yield session
@@ -59,8 +64,8 @@ def get_period(
 
 @router.put(
     "/settings/attendance-period",
-    response_model=AttendancePeriodOut,
-    summary="Define início e fim dos atendimentos do ciclo — Administrativo",
+    response_model=SavedAttendancePeriodOut,
+    summary="Define início e fim dos atendimentos e completa a agenda dos pares ativos — Administrativo",
 )
 def set_period(
     body: AttendancePeriodIn,
@@ -68,11 +73,19 @@ def set_period(
     current: CurrentUser = Depends(require_role(["ADMIN"])),
     db: Session = Depends(_get_db),
     audit: AuditRecorder = Depends(_get_audit),
-) -> AttendancePeriodOut:
-    period = SetAttendancePeriod(db, audit).execute(
-        current.sub, body.start_date, body.end_date, getattr(request.state, "correlation_id", None)
+) -> SavedAttendancePeriodOut:
+    correlation_id = getattr(request.state, "correlation_id", None)
+    period = SetAttendancePeriod(db, audit).execute(current.sub, body.start_date, body.end_date, correlation_id)
+    # Na mesma transação: os pares que já existiam ganham as semanas que
+    # faltam até o novo fim. Pares novos já nascem com a série (create_match),
+    # então salvar o período é o único momento em que isso precisa rodar —
+    # não há mais um passo separado para o administrativo lembrar.
+    r = GenerateSeries(db, audit).execute(current.sub, correlation_id)
+    return SavedAttendancePeriodOut(
+        start_date=period.start,
+        end_date=period.end,
+        series=SeriesResultOut(created=r.created, pairs=r.pairs, pairs_without_anchor=r.pairs_without_anchor),
     )
-    return AttendancePeriodOut(start_date=period.start, end_date=period.end)
 
 
 @router.post(

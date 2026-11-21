@@ -4,7 +4,7 @@ o sistema agenda as consultas semanais dos pares dentro dele.
 - SetAttendancePeriod grava a configuração (a mais recente vale).
 - GenerateSeries aplica a série aos pares que JÁ existiam — os criados
   depois da configuração já nascem com ela (ver create_match no
-  pareamento). Usa a consulta mais recente de cada vínculo ativo como
+  pareamento). Roda sozinho ao salvar o período (rota PUT). Usa a consulta mais recente de cada vínculo ativo como
   referência de dia/horário/sala: é o horário combinado do par.
 """
 

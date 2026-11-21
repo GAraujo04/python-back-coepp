@@ -11,7 +11,7 @@ from ....shared.http.camel_model import CamelModel
 
 class AssignmentViewOut(CamelModel):
     id: str
-    patient_name: str
+    patient_code: str
     intern_id: str
     intern_name: str
     supervisor_id: str | None

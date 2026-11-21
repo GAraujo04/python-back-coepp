@@ -1,10 +1,12 @@
-"""Rotas do supervisor/administrativo para a trava de disponibilidade do
-estagiário: ver pedidos, liberar por um prazo, recusar/revogar. Regra em
+"""Rotas da trava de disponibilidade do estagiário. O supervisor vê os
+pedidos, libera por um prazo, recusa/revoga; o administrativo só vê as
+alterações já feitas (com a nova disponibilidade). Regra em
 application/availability_lock.py."""
 
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import timedelta
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
@@ -15,9 +17,18 @@ from ....shared.auth.jwt_auth import CurrentUser, require_role
 from ....shared.db.session import get_session
 from ..application.availability_lock import Actor, GrantAvailabilityUnlock, RevokeAvailabilityUnlock, utcnow
 from ..infrastructure.sqlalchemy_availability_lock_repository import SqlAlchemyAvailabilityLockRepository
-from .schemas import AvailabilityUnlockIn, AvailabilityUnlockOut, PendingAvailabilityRequestOut
+from .schemas import (
+    AvailabilityChangeOut,
+    AvailabilityUnlockIn,
+    AvailabilityUnlockOut,
+    AvailabilityWindowOut,
+    PendingAvailabilityRequestOut,
+)
 
 router = APIRouter(prefix="/api", tags=["availability-lock"])
+
+# Até quando uma alteração continua na lista do administrativo.
+RECENT_CHANGES_WINDOW = timedelta(days=30)
 
 
 def _get_db() -> Iterator[Session]:
@@ -36,13 +47,12 @@ def _get_audit(db: Session = Depends(_get_db)) -> AuditRecorder:
 @router.get(
     "/availability-requests",
     response_model=list[PendingAvailabilityRequestOut],
-    summary="Pedidos de mudança de disponibilidade e liberações em vigor (Supervisor: seus estagiários; Admin: todos)",
+    summary="Pedidos de mudança de disponibilidade e liberações em vigor dos estagiários do supervisor",
 )
 def list_requests(
-    current: CurrentUser = Depends(require_role(["SUPERVISOR", "ADMIN"])),
+    current: CurrentUser = Depends(require_role(["SUPERVISOR"])),
     repo: SqlAlchemyAvailabilityLockRepository = Depends(_get_repo),
 ) -> list[PendingAvailabilityRequestOut]:
-    supervisor_id = None if current.role == "ADMIN" else current.sub
     return [
         PendingAvailabilityRequestOut(
             intern_id=r.intern_id,
@@ -52,7 +62,28 @@ def list_requests(
             reason=r.reason,
             unlocked_until=r.unlocked_until,
         )
-        for r in repo.list_open(supervisor_id, utcnow())
+        for r in repo.list_open(current.sub, utcnow())
+    ]
+
+
+@router.get(
+    "/availability-changes",
+    response_model=list[AvailabilityChangeOut],
+    summary="Alterações de disponibilidade dos últimos 30 dias, com a nova disponibilidade (Administrativo)",
+)
+def list_changes(
+    current: CurrentUser = Depends(require_role(["ADMIN"])),
+    repo: SqlAlchemyAvailabilityLockRepository = Depends(_get_repo),
+) -> list[AvailabilityChangeOut]:
+    return [
+        AvailabilityChangeOut(
+            intern_id=c.intern_id,
+            intern_name=c.intern_name,
+            ra=c.ra,
+            changed_at=c.changed_at,
+            windows=[AvailabilityWindowOut(weekday=d, start_time=a, end_time=b) for d, a, b in c.windows],
+        )
+        for c in repo.list_changes_since(utcnow() - RECENT_CHANGES_WINDOW)
     ]
 
 
@@ -65,7 +96,7 @@ def unlock(
     intern_id: str,
     body: AvailabilityUnlockIn,
     request: Request,
-    current: CurrentUser = Depends(require_role(["SUPERVISOR", "ADMIN"])),
+    current: CurrentUser = Depends(require_role(["SUPERVISOR"])),
     repo: SqlAlchemyAvailabilityLockRepository = Depends(_get_repo),
     audit: AuditRecorder = Depends(_get_audit),
 ) -> AvailabilityUnlockOut:
@@ -83,7 +114,7 @@ def unlock(
 def relock(
     intern_id: str,
     request: Request,
-    current: CurrentUser = Depends(require_role(["SUPERVISOR", "ADMIN"])),
+    current: CurrentUser = Depends(require_role(["SUPERVISOR"])),
     repo: SqlAlchemyAvailabilityLockRepository = Depends(_get_repo),
     audit: AuditRecorder = Depends(_get_audit),
 ) -> None:

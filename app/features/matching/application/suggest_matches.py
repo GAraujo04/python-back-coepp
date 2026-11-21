@@ -20,7 +20,7 @@ from ..infrastructure.sqlalchemy_matching_repository import SqlAlchemyMatchingRe
 @dataclass
 class MatchSuggestion:
     patient_id: str
-    patient_name: str
+    patient_code: str
     intern_id: str
     intern_name: str
     room_id: str
@@ -42,7 +42,7 @@ class SuggestMatches:
         patients = self._repo.candidate_patients()
         interns = self._repo.interns_with_windows()
         rooms = self._repo.active_rooms()
-        candidates = find_all_candidates(patients, interns, rooms, now)
+        candidates = find_all_candidates(patients, interns, rooms, now, self._repo.reservations())
 
         patient_by_id = {p.id: p for p in patients}
         intern_by_id = {i.id: i for i in interns}
@@ -51,7 +51,7 @@ class SuggestMatches:
         return [
             MatchSuggestion(
                 patient_id=c.patient_id,
-                patient_name=patient_by_id[c.patient_id].name if c.patient_id in patient_by_id else "",
+                patient_code=patient_by_id[c.patient_id].code if c.patient_id in patient_by_id else "",
                 intern_id=c.intern_id,
                 intern_name=intern_by_id[c.intern_id].name if c.intern_id in intern_by_id else "",
                 room_id=c.room_id,

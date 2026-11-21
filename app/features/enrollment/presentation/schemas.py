@@ -149,3 +149,11 @@ class PendingAvailabilityRequestOut(CamelModel):
     requested_at: UtcDatetime | None
     reason: str | None
     unlocked_until: UtcDatetime | None
+
+
+class AvailabilityChangeOut(CamelModel):
+    intern_id: str
+    intern_name: str
+    ra: str | None
+    changed_at: UtcDatetime
+    windows: list[AvailabilityWindowOut]

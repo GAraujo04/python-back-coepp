@@ -40,3 +40,14 @@ def test_sem_sala_da_categoria_usa_outra_livre() -> None:
     intern = PersonWithWindows(id="i", name="I", windows=WINDOW)
     [candidate] = find_all_candidates([patient], [intern], [ROOMS[0]], NOW)
     assert candidate.room_id == "sala-1"
+
+
+def test_horario_de_proposta_em_aberto_nao_e_proposto_de_novo() -> None:
+    from app.features.matching.domain.find_candidates import Reservation
+
+    patient = PersonWithWindows(id="p", name="P", windows=WINDOW)
+    intern = PersonWithWindows(id="i", name="I", windows=WINDOW)
+    [livre] = find_all_candidates([patient], [intern], ROOMS, NOW)
+    # O mesmo estagiário já está proposto nesse horário para outro paciente.
+    reservado = Reservation(intern_id="i", room_id="sala-1", scheduled_at=livre.scheduled_at)
+    assert find_all_candidates([patient], [intern], ROOMS, NOW, [reservado]) == []

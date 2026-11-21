@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -24,6 +25,8 @@ class PersonWithWindows:
     windows: list[WindowSlot] = field(default_factory=list)
     # Só faz sentido para paciente (ver room_category.preferred_room_category).
     preferred_room_category: RoomCategory | None = None
+    # Só paciente: o número que identifica o paciente nas telas do administrativo.
+    code: str = ""
 
 
 @dataclass
@@ -31,6 +34,15 @@ class RoomOption:
     id: str
     name: str
     category: str = DEFAULT_ROOM_CATEGORY
+
+
+@dataclass
+class Reservation:
+    """Horário já tomado por uma proposta em aberto: não pode ser proposto de novo."""
+
+    intern_id: str
+    room_id: str | None
+    scheduled_at: datetime
 
 
 @dataclass
@@ -46,16 +58,21 @@ def find_all_candidates(
     interns: list[PersonWithWindows],
     rooms: list[RoomOption],
     now: datetime,
+    reserved: Iterable[Reservation] = (),
 ) -> list[Candidate]:
     """Busca todos os pares (paciente, estagiário, sala, horário) válidos
     nesta "rodada": mesmo dia da semana, sobreposição >= duração da sessão,
     sala livre, sem reutilizar sala/estagiário no mesmo instante dentro da
-    própria rodada. Função pura — usada tanto pelo pareamento real
+    própria rodada nem os de `reserved` (propostas ainda em aberto). Função pura — usada tanto pelo pareamento real
     (RunMatching, que persiste) quanto pela sugestão somente-leitura
     (SuggestMatches), para as duas nunca divergirem."""
     matched_patients: set[str] = set()
     intern_busy: set[str] = set()  # f"{intern_id}|{iso_datetime}"
     room_busy: set[str] = set()  # f"{room_id}|{iso_datetime}"
+    for r in reserved:
+        intern_busy.add(f"{r.intern_id}|{r.scheduled_at.isoformat()}")
+        if r.room_id:
+            room_busy.add(f"{r.room_id}|{r.scheduled_at.isoformat()}")
     results: list[Candidate] = []
 
     for patient in patients:

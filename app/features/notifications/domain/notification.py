@@ -4,7 +4,8 @@ Dois tipos:
 - PENDÊNCIA (`actionable`): algo a fazer. Aparece enquanto existir —
   documento esperando revisão, ajuste solicitado — e some quando resolvido.
   Não há "marcar como lida": o aviso é o próprio trabalho pendente.
-- INFORMATIVO: algo que aconteceu (documento aprovado/rejeitado). Fica
+- INFORMATIVO: algo que aconteceu (documento aprovado/rejeitado,
+  disponibilidade alterada). Fica
   visível por INFO_WINDOW e conta no sininho só até a pessoa abrir a lista
   (users.notifications_seen_at).
 
@@ -22,7 +23,8 @@ INFO_WINDOW = timedelta(days=14)
 
 NotificationKind = Literal[
     "REVIEW_QUEUE",  # supervisor: documentos aguardando revisão
-    "AVAILABILITY_REQUESTS",  # supervisor/admin: pedidos de alteração de disponibilidade
+    "AVAILABILITY_REQUESTS",  # supervisor: pedidos de alteração de disponibilidade
+    "AVAILABILITY_CHANGED",  # admin: informativo — estagiário(s) alteraram a disponibilidade
     "PENDING_MATCHES",  # admin: pacientes sem pareamento exato
     "ASSIGNMENTS_WITHOUT_SUPERVISOR",  # admin: vínculos sem supervisor (documentos ficam fora da fila)
     "CHANGES_REQUESTED",  # estagiário: supervisor pediu ajustes
