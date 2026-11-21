@@ -10,7 +10,7 @@ import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ....shared.crypto.field_encryption import decrypt_field
@@ -55,6 +55,27 @@ class MatchProposalView:
     room_id: str | None
     room_name: str | None
     scheduled_at: datetime
+
+
+@dataclass
+class UnmatchedPatient:
+    id: str
+    code: str
+    is_minor: bool
+    has_disability: bool
+    windows: list[WindowSlot]
+    registered_at: datetime
+    # Desde quando o pareamento automático não acha horário compatível
+    # (None = ainda não passou por uma rodada).
+    no_match_since: datetime | None
+
+
+@dataclass
+class UnmatchedIntern:
+    id: str
+    name: str
+    ra: str | None
+    windows: list[WindowSlot]
 
 
 @dataclass
@@ -200,6 +221,16 @@ class SqlAlchemyMatchingRepository:
                 status="SCHEDULED",
             )
             session.add(appt)
+            # O paciente ganhou par: o alerta de "sem horário compatível", se
+            # havia, deixa de valer.
+            for pending in session.scalars(
+                select(PendingMatchRequest).where(
+                    PendingMatchRequest.patient_id == m.patient_id,
+                    PendingMatchRequest.status == "pendente_ajuste_manual",
+                )
+            ):
+                pending.status = "resolvido"
+                pending.resolved_at = datetime.now(UTC).replace(tzinfo=None)
             session.flush()
             # Com período configurado, o par já sai com a agenda do ciclo:
             # toda semana, mesmo dia e horário, até o fim do período. Sem
@@ -268,15 +299,77 @@ class SqlAlchemyMatchingRepository:
         negociar manualmente. intern_id pode ser None se não havia
         nenhum estagiário com disponibilidade cadastrada (nada pra
         sugerir, mas o paciente ainda assim fica registrado como
-        pendente de ajuste manual)."""
-        self._session.add(
-            PendingMatchRequest(
-                patient_id=patient_id,
-                suggested_intern_id=suggestion.intern_id if suggestion else None,
-                suggested_at=suggestion.suggested_at if suggestion else None,
+        pendente de ajuste manual).
+
+        Um alerta em aberto por paciente: rodar o pareamento de novo só
+        atualiza a sugestão do alerta que já existe (antes, cada rodada
+        duplicava o paciente na lista e no sininho)."""
+        existing = self._session.scalar(
+            select(PendingMatchRequest).where(
+                PendingMatchRequest.patient_id == patient_id,
+                PendingMatchRequest.status == "pendente_ajuste_manual",
             )
         )
+        row = existing or PendingMatchRequest(patient_id=patient_id)
+        row.suggested_intern_id = suggestion.intern_id if suggestion else None
+        row.suggested_at = suggestion.suggested_at if suggestion else None
+        if not existing:
+            self._session.add(row)
         self._session.flush()
+
+    def unmatched(self) -> tuple[list[UnmatchedPatient], list[UnmatchedIntern]]:
+        """Quem está sem par, para o administrativo conversar e parear à mão:
+        pacientes sem vínculo ativo nem proposta em aberto (quem espera há
+        mais tempo primeiro) e estagiários ativos sem nenhum paciente."""
+        active = select(Assignment).where(Assignment.active)
+        proposals = select(MatchProposal)
+        patients = self._session.scalars(
+            select(PatientRow)
+            .where(
+                PatientRow.id.not_in(active.with_only_columns(Assignment.patient_id)),
+                PatientRow.id.not_in(proposals.with_only_columns(MatchProposal.patient_id)),
+            )
+            .order_by(PatientRow.created_at.asc())
+        ).all()
+        rows = self._session.execute(
+            select(PendingMatchRequest.patient_id, func.min(PendingMatchRequest.created_at))
+            .where(PendingMatchRequest.status == "pendente_ajuste_manual")
+            .group_by(PendingMatchRequest.patient_id)
+        ).all()
+        no_match_since: dict[str, datetime] = {patient_id: since for patient_id, since in rows}
+        interns = self._session.scalars(
+            select(User)
+            .where(
+                User.role == "INTERN",
+                User.active,
+                User.id.not_in(active.with_only_columns(Assignment.intern_id)),
+                User.id.not_in(proposals.with_only_columns(MatchProposal.intern_id)),
+            )
+            .order_by(User.full_name.asc())
+        ).all()
+        return (
+            [
+                UnmatchedPatient(
+                    id=p.id,
+                    code=p.code,
+                    is_minor=_is_minor(p),
+                    has_disability=p.has_disability,
+                    windows=sorted(_windows_of(p.availability_windows), key=lambda w: (w.weekday, w.start_time)),
+                    registered_at=p.created_at,
+                    no_match_since=no_match_since.get(p.id),
+                )
+                for p in patients
+            ],
+            [
+                UnmatchedIntern(
+                    id=u.id,
+                    name=u.full_name,
+                    ra=u.ra,
+                    windows=sorted(_windows_of(u.availability_windows), key=lambda w: (w.weekday, w.start_time)),
+                )
+                for u in interns
+            ],
+        )
 
     def list_pending_match_requests(self) -> list[PendingMatchRequestView]:
         """Alertas de fallback pendentes (visão do admin — sem RLS, mesma exceção de assignments)."""

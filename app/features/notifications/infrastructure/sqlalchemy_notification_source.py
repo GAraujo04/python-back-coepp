@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from ....shared.db.models import Assignment, ClinicalDocument, PendingMatchRequest, User
+from ....shared.db.models import Assignment, ClinicalDocument, MatchProposal, PendingMatchRequest, User
 from ....shared.db.session import with_rls_context
 from ...documents.infrastructure.sqlalchemy_document_repository import SqlAlchemyDocumentRepository
 from ...enrollment.infrastructure.sqlalchemy_availability_lock_repository import (
@@ -63,9 +63,15 @@ class SqlAlchemyNotificationSource:
     # --- admin ------------------------------------------------------------
 
     def _pending_matches(self) -> list[Notification]:
+        # Pacientes (distintos) que o pareamento não conseguiu encaixar e que
+        # continuam sem par — some sozinho quando ganham vínculo ou proposta.
         count, oldest = self._session.execute(
-            select(func.count(PendingMatchRequest.id), func.min(PendingMatchRequest.created_at)).where(
-                PendingMatchRequest.status == "pendente_ajuste_manual"
+            select(
+                func.count(func.distinct(PendingMatchRequest.patient_id)), func.min(PendingMatchRequest.created_at)
+            ).where(
+                PendingMatchRequest.status == "pendente_ajuste_manual",
+                PendingMatchRequest.patient_id.not_in(select(Assignment.patient_id).where(Assignment.active)),
+                PendingMatchRequest.patient_id.not_in(select(MatchProposal.patient_id)),
             )
         ).one()
         return [Notification(kind="PENDING_MATCHES", actionable=True, at=oldest, count=count)] if count else []

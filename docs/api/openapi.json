@@ -2699,6 +2699,121 @@
         "title": "TransitionResponse",
         "type": "object"
       },
+      "UnmatchedInternOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "ra": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ra"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/WindowOut"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "ra",
+          "windows"
+        ],
+        "title": "UnmatchedInternOut",
+        "type": "object"
+      },
+      "UnmatchedOut": {
+        "properties": {
+          "interns": {
+            "items": {
+              "$ref": "#/components/schemas/UnmatchedInternOut"
+            },
+            "title": "Interns",
+            "type": "array"
+          },
+          "patients": {
+            "items": {
+              "$ref": "#/components/schemas/UnmatchedPatientOut"
+            },
+            "title": "Patients",
+            "type": "array"
+          }
+        },
+        "required": [
+          "patients",
+          "interns"
+        ],
+        "title": "UnmatchedOut",
+        "type": "object"
+      },
+      "UnmatchedPatientOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "hasDisability": {
+            "title": "Hasdisability",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "isMinor": {
+            "title": "Isminor",
+            "type": "boolean"
+          },
+          "noMatchSince": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nomatchsince"
+          },
+          "registeredAt": {
+            "title": "Registeredat",
+            "type": "string"
+          },
+          "windows": {
+            "items": {
+              "$ref": "#/components/schemas/WindowOut"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "isMinor",
+          "hasDisability",
+          "windows",
+          "registeredAt",
+          "noMatchSince"
+        ],
+        "title": "UnmatchedPatientOut",
+        "type": "object"
+      },
       "UpdateAssignmentRequest": {
         "properties": {
           "active": {
@@ -2978,6 +3093,29 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WindowOut": {
+        "properties": {
+          "endTime": {
+            "title": "Endtime",
+            "type": "string"
+          },
+          "startTime": {
+            "title": "Starttime",
+            "type": "string"
+          },
+          "weekday": {
+            "title": "Weekday",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "weekday",
+          "startTime",
+          "endTime"
+        ],
+        "title": "WindowOut",
         "type": "object"
       }
     },
@@ -4418,6 +4556,32 @@
           }
         ],
         "summary": "Pares que o pareamento automático formaria, sem persistir (Administrativo)",
+        "tags": [
+          "matching"
+        ]
+      }
+    },
+    "/api/matching/unmatched": {
+      "get": {
+        "operationId": "unmatched_api_matching_unmatched_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnmatchedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Pacientes e estagiários sem par, com a disponibilidade, para pareamento manual (Administrativo)",
         "tags": [
           "matching"
         ]
