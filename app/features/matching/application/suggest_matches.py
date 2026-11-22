@@ -42,6 +42,8 @@ class SuggestMatches:
         patients = self._repo.candidate_patients()
         interns = self._repo.interns_with_windows()
         rooms = self._repo.active_rooms()
+        if not rooms:
+            return []  # sem sala não há par possível (a tela avisa)
         candidates = find_all_candidates(patients, interns, rooms, now, self._repo.reservations())
 
         patient_by_id = {p.id: p for p in patients}

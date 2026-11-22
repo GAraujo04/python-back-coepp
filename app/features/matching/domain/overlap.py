@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ....shared.scheduling.session_duration import SESSION_DURATION_MINUTES
+from ....shared.scheduling.session_duration import SESSION_DURATION_MINUTES, SLOT_MINUTES
 
 
 def _to_minutes(hhmm: str) -> int:
@@ -20,10 +20,11 @@ def earlier_end(a: str, b: str) -> str:
     return a if a < b else b
 
 
-def has_minimum_overlap(a_start: str, a_end: str, b_start: str, b_end: str) -> bool:
-    """A interseção entre [a_start,a_end) e [b_start,b_end) tem pelo menos
-    SESSION_DURATION_MINUTES? É o que define se cabe uma sessão no horário
-    em comum entre a disponibilidade do paciente e a do estagiário."""
-    start = later_start(a_start, b_start)
-    end = earlier_end(a_end, b_end)
-    return _to_minutes(end) - _to_minutes(start) >= SESSION_DURATION_MINUTES
+def has_minimum_overlap(patient_start: str, patient_end: str, intern_start: str, intern_end: str) -> bool:
+    """Cabe uma sessão no horário em comum, começando no maior dos inícios?
+    O paciente precisa da consulta (SESSION_DURATION_MINUTES); o estagiário,
+    da consulta + o intervalo para organizar a sala (SLOT_MINUTES)."""
+    start = _to_minutes(later_start(patient_start, intern_start))
+    return start + SESSION_DURATION_MINUTES <= _to_minutes(patient_end) and start + SLOT_MINUTES <= _to_minutes(
+        intern_end
+    )
