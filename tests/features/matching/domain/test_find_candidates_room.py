@@ -51,3 +51,9 @@ def test_horario_de_proposta_em_aberto_nao_e_proposto_de_novo() -> None:
     # O mesmo estagiário já está proposto nesse horário para outro paciente.
     reservado = Reservation(intern_id="i", room_id="sala-1", scheduled_at=livre.scheduled_at)
     assert find_all_candidates([patient], [intern], ROOMS, NOW, [reservado]) == []
+
+
+def test_sem_sala_nao_ha_candidato() -> None:
+    patient = PersonWithWindows(id="p", name="P", windows=WINDOW)
+    intern = PersonWithWindows(id="i", name="I", windows=WINDOW)
+    assert find_all_candidates([patient], [intern], [], NOW) == []

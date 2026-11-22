@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from ....shared.audit.audit_recorder import AuditEvent, AuditRecorder
+from ....shared.errors.app_error import ValidationError
 from ....shared.http.utc_datetime import to_iso_utc
 from ....shared.scheduling.weekly_series import period_start_utc
 from ..domain.find_candidates import find_all_candidates
@@ -63,6 +64,10 @@ class RunMatching:
         patients = self._repo.candidate_patients()
         interns = self._repo.interns_with_windows()
         rooms = self._repo.active_rooms()
+        if not rooms:
+            # Sem sala não há par possível — e sem este aviso a rodada
+            # terminava "sem horários coincidentes", o que não era verdade.
+            raise ValidationError("Cadastre ao menos uma sala ativa antes de rodar o pareamento.")
         candidates = find_all_candidates(patients, interns, rooms, now, self._repo.reservations())
 
         results: list[MatchResult] = []

@@ -119,9 +119,9 @@ def _find_candidate(
     return None
 
 
-def _candidate_time(a: WindowSlot, b: WindowSlot, now: datetime) -> datetime | None:
-    if a.weekday != b.weekday:
+def _candidate_time(patient: WindowSlot, intern: WindowSlot, now: datetime) -> datetime | None:
+    if patient.weekday != intern.weekday:
         return None
-    if not has_minimum_overlap(a.start_time, a.end_time, b.start_time, b.end_time):
+    if not has_minimum_overlap(patient.start_time, patient.end_time, intern.start_time, intern.end_time):
         return None
-    return next_occurrence(a.weekday, later_start(a.start_time, b.start_time), now)
+    return next_occurrence(patient.weekday, later_start(patient.start_time, intern.start_time), now)
